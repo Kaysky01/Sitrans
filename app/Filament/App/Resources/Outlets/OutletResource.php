@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Filament\App\Resources\Outlets;
+
+use App\Filament\App\Resources\Outlets\Pages\CreateOutlet;
+use App\Filament\App\Resources\Outlets\Pages\EditOutlet;
+use App\Filament\App\Resources\Outlets\Pages\ListOutlets;
+use App\Filament\App\Resources\Outlets\Schemas\OutletForm;
+use App\Filament\App\Resources\Outlets\Tables\OutletsTable;
+use App\Models\Outlet;
+use App\Support\Access\ChecksResourcePermissions;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class OutletResource extends Resource
+{
+    use ChecksResourcePermissions;
+
+    protected static ?string $model = Outlet::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
+
+    protected static ?string $navigationLabel = 'Outlet';
+
+    protected static ?string $modelLabel = 'outlet';
+
+    protected static ?int $navigationSort = 1;
+
+    public static function form(Schema $schema): Schema
+    {
+        return OutletForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return OutletsTable::configure($table);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListOutlets::route('/'),
+            'create' => CreateOutlet::route('/create'),
+            'edit' => EditOutlet::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()
+            ->withoutGlobalScopes([SoftDeletingScope::class]);
+    }
+}

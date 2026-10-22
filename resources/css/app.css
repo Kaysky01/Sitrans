@@ -1,0 +1,177 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+
+/*
+|--------------------------------------------------------------------------
+| Utilities
+|--------------------------------------------------------------------------
+*/
+@utility scrollbar-none {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Dark mode
+|--------------------------------------------------------------------------
+| Class-based dark mode (toggled on <html class="dark">), not media-query
+| based, so users can flip the theme manually. Espresso-toned, never pure
+| black.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+|------------------------------------------------------------------------
+| Sitrans Design Tokens (v2 — navy & terracotta)
+|-----------------------------------------------------------------------
+| High-end hospitality SaaS identity: navy primary with vibrant orange
+| accents on a warm cream canvas. Plus Jakarta Sans headlines, Work Sans
+| body. Sketch source: DESIGN.md.
+*/
+/* Alpine: force-show x-cloak'd elements once Alpine boots */
+[x-cloak] {
+    display: none !important;
+}
+
+@theme {
+    /* Typography */
+    --font-sans: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Plus Jakarta Sans', 'Work Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* Warm neutral base */
+    --color-cream: #faf7f2;
+    --color-cream-50: #fcf9f4;
+    --color-cream-100: #faf7f2;
+    --color-cream-200: #f0ede9;
+    --color-cream-300: #e5e2dd;
+
+    --color-charcoal: #1c1c19;
+    --color-charcoal-600: #44474e;
+    --color-charcoal-700: #44474e;
+    --color-charcoal-800: #292524;
+    --color-charcoal-900: #1c1917;
+    --color-charcoal-950: #141110;
+
+    /* Primary: deep navy (brand #0b2545, deepest #001026) */
+    --color-navy-50: #f2f6fc;
+    --color-navy-100: #dfeaf6;
+    --color-navy-200: #c2d3e8;
+    --color-navy-300: #9ab4d8;
+    --color-navy-400: #6087b3;
+    --color-navy-500: #16406f;
+    --color-navy-600: #0b2545;
+    --color-navy-700: #09203c;
+    --color-navy-800: #071a30;
+    --color-navy-900: #051222;
+    --color-navy-950: #001026;
+
+    /* Error: M3 error scale */
+    --color-danger-50: #ffdad6;
+    --color-danger-100: #ffdad6;
+    --color-danger-300: #ffb4ab;
+    --color-danger-500: #e53e3e;
+    --color-danger-600: #ba1a1a;
+    --color-danger-700: #93000a;
+    --color-danger-800: #690005;
+
+    /* Secondary: soft terracotta (highlights + gentle warnings only) */
+    --color-terracotta-50: #fbeee9;
+    --color-terracotta-100: #f6ddd3;
+    --color-terracotta-200: #efbba9;
+    --color-terracotta-300: #e89b85;
+    --color-terracotta-400: #e2725b;
+    --color-terracotta-500: #d25a42;
+    --color-terracotta-600: #b24532;
+    --color-terracotta-700: #8c3527;
+    --color-terracotta-800: #6b281d;
+    --color-terracotta-900: #4a1b14;
+
+    /* Dark surfaces: espresso, not #000 */
+    --color-espresso-700: #3b322c;
+    --color-espresso-800: #2a2320;
+    --color-espresso-900: #1c1917;
+    --color-espresso-950: #141110;
+
+    /* Radii: generous rounding (16-24px) */
+    --radius-lg: 0.875rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.25rem;
+    --radius-3xl: 1.5rem;
+
+    /* Soft, layered shadows */
+    --shadow-soft: 0 1px 2px rgba(28, 25, 23, 0.04), 0 8px 24px -12px rgba(28, 25, 23, 0.12);
+    --shadow-lift: 0 2px 4px rgba(28, 25, 23, 0.05), 0 18px 40px -18px rgba(28, 25, 23, 0.22);
+    --shadow-glow: 0 12px 32px -10px rgba(16, 185, 129, 0.45);
+
+    /* Motion */
+    --ease-snappy: cubic-bezier(0.22, 1, 0.36, 1);
+    --default-transition-duration: 200ms;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        background-color: var(--color-cream-100);
+        color: var(--color-charcoal-900);
+        font-family: var(--font-sans);
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    .dark body {
+        background-color: var(--color-espresso-950);
+        color: var(--color-cream-100);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-display);
+        letter-spacing: -0.02em;
+    }
+
+    /* Numbers in the cashier and reports must align vertically. */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-navy-500);
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+@utility glass {
+    background-color: color-mix(in srgb, var(--color-cream-50) 72%, transparent);
+    backdrop-filter: blur(16px) saturate(140%);
+}
+
+.dark .glass {
+    background-color: color-mix(in srgb, var(--color-espresso-900) 72%, transparent);
+}

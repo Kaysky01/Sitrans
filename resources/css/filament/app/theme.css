@@ -1,0 +1,258 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/App/**/*';
+@source '../../../../app/Filament/Admin/**/*';
+@source '../../../../resources/views/filament/app/**/*';
+@source '../../../../resources/views/livewire/outlet-switcher.blade.php';
+
+/* Brand tokens (mirrors resources/css/app.css so panel utilities compile) */
+@theme {
+    --color-cream-100: #faf7f2;
+    --color-cream-200: #f0ede9;
+    --color-cream-300: #e5e2dd;
+
+    --color-navy-50: #f2f6fc;
+    --color-navy-100: #dfeaf6;
+    --color-navy-200: #c2d3e8;
+    --color-navy-300: #9ab4d8;
+    --color-navy-400: #6087b3;
+    --color-navy-500: #16406f;
+    --color-navy-600: #0b2545;
+    --color-navy-700: #09203c;
+    --color-navy-800: #071a30;
+    --color-navy-900: #051222;
+    --color-navy-950: #001026;
+
+    --color-terracotta-400: #e2725b;
+
+    --color-danger-50: #ffdad6;
+    --color-danger-300: #ffb4ab;
+    --color-danger-600: #ba1a1a;
+    --color-danger-700: #93000a;
+}
+
+/* Bright & Modern Back Office UI/UX */
+:root {
+    --font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --fi-body-bg-color: #f6f8fc;
+}
+
+/* Bright Topbar & Sidebar */
+.fi-topbar {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+}
+
+.fi-sidebar {
+    background-color: #ffffff !important;
+    border-right: 1px solid rgba(226, 232, 240, 0.9) !important;
+}
+
+.fi-sidebar-header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-btn {
+    background: linear-gradient(135deg, rgba(11, 37, 69, 0.12), rgba(49, 71, 105, 0.08)) !important;
+    color: #0b2545 !important;
+    font-weight: 700 !important;
+    border-radius: 0.875rem !important;
+}
+
+.fi-sidebar-item-active .fi-sidebar-item-icon {
+    color: #0b2545 !important;
+}
+
+.fi-sidebar-item-btn {
+    border-radius: 0.875rem !important;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease !important;
+}
+
+.fi-sidebar-item-btn:hover {
+    background-color: #f2f6fc !important;
+    color: #0b2545 !important;
+}
+
+/* Main Content Area */
+.fi-main {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(194, 211, 232, 0.36), transparent 28rem),
+        #f6f8fc !important;
+}
+
+.fi-page,
+.fi-page-content,
+.fi-ta {
+    width: 100%;
+}
+
+/* Sections and Cards */
+.fi-section {
+    border-radius: 1.25rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+    background-color: #ffffff !important;
+}
+
+.fi-page-header-heading,
+.fi-header-heading {
+    color: #071a30 !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.025em !important;
+}
+
+.fi-page-header-description,
+.fi-header-subheading {
+    color: #64748b !important;
+}
+
+.fi-wi-stats-overview-stat {
+    border-radius: 1.25rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+    background-color: #ffffff !important;
+}
+
+/* Tables */
+.fi-ta-table {
+    border-radius: 1rem !important;
+}
+
+.fi-ta {
+    overflow: hidden;
+    min-width: 0;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 1.25rem;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.fi-ta-header,
+.fi-ta-header-ctn {
+    background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
+}
+
+.fi-ta-header-cell {
+    color: #64748b !important;
+    font-size: 0.6875rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.fi-ta-row {
+    transition: background-color 160ms ease;
+}
+
+.fi-ta-row:hover {
+    background-color: #f8fbff !important;
+}
+
+.fi-ta-header {
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+}
+
+.fi-btn-primary {
+    background: linear-gradient(135deg, #0b2545, #314769) !important;
+    box-shadow: 0 4px 12px -2px rgba(11, 37, 69, 0.35) !important;
+    border-radius: 0.75rem !important;
+    font-weight: 700 !important;
+}
+
+.fi-btn-primary:hover {
+    background: linear-gradient(135deg, #001026, #0b2545) !important;
+    box-shadow: 0 6px 16px -2px rgba(11, 37, 69, 0.45) !important;
+}
+
+.fi-input,
+.fi-select-input,
+.fi-fo-field-wrp input,
+.fi-fo-field-wrp select,
+.fi-fo-field-wrp textarea {
+    border-radius: 0.75rem !important;
+}
+
+.fi-modal-window {
+    border-radius: 1.25rem !important;
+}
+
+.fi-no-notification {
+    border-radius: 1rem !important;
+}
+
+/*
+ * Seluruh card mengikuti lebar jendela.
+ * maxContentWidth('full') di AppPanelProvider membuka batas lebar konten;
+ * di sini yang perlu dijaga hanyalah lebar minimal supaya tidak meluber.
+ */
+.fi-main-ctn,
+.fi-section,
+.fi-ta-content {
+    min-width: 0 !important;
+}
+
+.fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Tablet: card sedikit lebih ringkas */
+@media (max-width: 1023.98px) {
+    .fi-section,
+    .fi-wi-stats-overview-stat {
+        border-radius: 1rem !important;
+    }
+
+    .fi-topbar {
+        padding-inline: 0.875rem !important;
+    }
+
+    .fi-main {
+        padding-inline: 1rem !important;
+    }
+}
+
+/* HP: card lebih ringkas lagi + gutser hemat */
+@media (max-width: 767.98px) {
+    .fi-section,
+    .fi-wi-stats-overview-stat {
+        border-radius: 0.875rem !important;
+    }
+
+    .fi-main-ctn {
+        padding-inline: 0.875rem !important;
+    }
+
+    .fi-main-ctn {
+        padding-block: 1rem !important;
+    }
+
+    .fi-main {
+        padding-inline: 0.75rem !important;
+    }
+
+    .fi-page-header {
+        gap: 0.75rem !important;
+    }
+
+    .fi-page-header-heading,
+    .fi-header-heading {
+        font-size: 1.35rem !important;
+    }
+
+    .fi-ta {
+        border-radius: 0.875rem;
+    }
+
+    .fi-ta-content {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .fi-modal-window {
+        max-height: calc(100dvh - 1rem) !important;
+        border-bottom-right-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+}

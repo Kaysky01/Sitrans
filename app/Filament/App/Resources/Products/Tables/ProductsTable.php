@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Filament\App\Resources\Products\Tables;
+
+use App\Filament\App\Resources\Products\ProductResource;
+use App\Models\Product;
+use App\Support\Format;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
+
+class ProductsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                ImageColumn::make('image_path')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->defaultImageUrl(fn (Product $record): string => $record->imageUrl())
+                    ->circular()
+                    ->size(46),
+                TextColumn::make('name')
+                    ->label('Nama Menu')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
+                TextColumn::make('category.name')
+                    ->label('Kategori')
+                    ->badge()
+                    ->color('primary')
+                    ->sortable(),
+                TextColumn::make('price')
+                    ->label('Harga')
+                    ->formatStateUsing(fn ($state): string => Format::rupiah($state))
+                    ->weight('semibold')
+                    ->sortable(),
+                ToggleColumn::make('is_sold_out')->label('Habis'),
+                IconColumn::make('is_active')->label('Aktif')->boolean(),
+            ])
+            ->defaultSort('sort_order')
+            ->filters([
+                SelectFilter::make('category')->relationship('category', 'name')->label('Kategori'),
+                TernaryFilter::make('is_sold_out')->label('Habis'),
+                TernaryFilter::make('is_active')->label('Aktif'),
+            ])
+            ->recordActions([
+                Action::make('generate_photo')
+                    ->label('Auto Foto')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('success')
+                    ->visible(fn (Product $record): bool => ProductResource::canEdit($record))
+                    ->action(function (Product $record): void {
+                        $record->update(['image_path' => static::determinePhotoPath($record)]);
+
+                        Notification::make()
+                            ->title('Foto menu '.$record->name.' berhasil diperbarui')
+                            ->success()
+                            ->send();
+                    }),
+                EditAction::make()
+                    ->visible(fn (Product $record): bool => ProductResource::canEdit($record)),
+                DeleteAction::make()
+                    ->visible(fn (Product $record): bool => ProductResource::canDelete($record)),
+            ])
+            ->toolbarActions([
+                Action::make('generate_all_photos')
+                    ->label('Generate Semua Foto')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('primary')
+                    ->visible(fn (): bool => ProductResource::canCreate())
+                    ->action(function (): void {
+                        $products = Product::all();
+                        foreach ($products as $product) {
+                            $product->update(['image_path' => static::determinePhotoPath($product)]);
+                        }
+
+                        Notification::make()
+                            ->title('Foto berhasil di-generate untuk semua menu')
+                            ->success()
+                            ->send();
+                    }),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => ProductResource::canDeleteAny()),
+                ]),
+            ]);
+    }
+
+    public static function determinePhotoPath(Product $product): string
+    {
+        $name = strtolower($product->name);
+
+        if (str_contains($name, 'matcha')) {
+            return 'products/matcha.jpg';
+        }
+        if (str_contains($name, 'croissant')) {
+            return 'products/croissant.jpg';
+        }
+        if (str_contains($name, 'roti') || str_contains($name, 'toast') || str_contains($name, 'srikaya') || str_contains($name, 'pisang')) {
+            return 'products/toast.jpg';
+        }
+        if (str_contains($name, 'kentang') || str_contains($name, 'fries')) {
+            return 'products/fries.jpg';
+        }
+        if (str_contains($name, 'tea') || str_contains($name, 'teh')) {
+            return 'products/tea.jpg';
+        }
+        if (str_contains($name, 'choco') || str_contains($name, 'cokelat')) {
+            return 'products/chocolate.jpg';
+        }
+
+        return 'products/coffee.jpg';
+    }
+}

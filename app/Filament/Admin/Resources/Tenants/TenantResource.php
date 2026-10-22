@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Filament\Admin\Resources\Tenants;
+
+use App\Filament\Admin\Resources\Tenants\Pages\CreateTenant;
+use App\Filament\Admin\Resources\Tenants\Pages\EditTenant;
+use App\Filament\Admin\Resources\Tenants\Pages\ListTenants;
+use App\Filament\Admin\Resources\Tenants\Schemas\TenantForm;
+use App\Filament\Admin\Resources\Tenants\Tables\TenantsTable;
+use App\Models\Tenant;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
+class TenantResource extends Resource
+{
+    protected static ?string $model = Tenant::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
+
+    protected static ?string $navigationLabel = 'Kafe';
+
+    protected static ?string $modelLabel = 'kafe';
+
+    protected static ?int $navigationSort = 1;
+
+    public static function form(Schema $schema): Schema
+    {
+        return TenantForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return TenantsTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->withCount(['users', 'outlets']);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListTenants::route('/'),
+            'create' => CreateTenant::route('/create'),
+            'edit' => EditTenant::route('/{record}/edit'),
+        ];
+    }
+}
