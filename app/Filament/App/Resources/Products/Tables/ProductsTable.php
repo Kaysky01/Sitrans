@@ -18,6 +18,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductsTable
 {
@@ -53,7 +54,16 @@ class ProductsTable
                 ToggleColumn::make('is_sold_out')->label('Habis'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
-            ->defaultSort('sort_order')
+            ->defaultSort(fn (Builder $query): Builder => $query->orderBy('sort_order')->orderBy('name'))
+            ->reorderable(
+                'sort_order',
+                condition: fn (): bool => ProductResource::canCreate(),
+            )
+            ->reorderRecordsTriggerAction(
+                fn (Action $action, bool $isReordering): Action => $action
+                    ->label($isReordering ? 'Selesai Mengurutkan' : 'Urutkan Menu')
+                    ->tooltip('Aktifkan lalu seret baris untuk mengatur urutan menu yang tampil di POS.'),
+            )
             ->filters([
                 SelectFilter::make('category')->relationship('category', 'name')->label('Kategori'),
                 TernaryFilter::make('is_sold_out')->label('Habis'),

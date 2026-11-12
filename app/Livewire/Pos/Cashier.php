@@ -214,7 +214,7 @@ class Cashier extends Component
     #[Computed]
     public function categories(): Collection
     {
-        return Category::query()->where('is_active', true)->orderBy('name')->get();
+        return Category::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
     }
 
     /**

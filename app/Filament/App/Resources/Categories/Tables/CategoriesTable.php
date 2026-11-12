@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources\Categories\Tables;
 
 use App\Filament\App\Resources\Categories\CategoryResource;
 use App\Models\Category;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -12,6 +13,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoriesTable
 {
@@ -25,7 +27,16 @@ class CategoriesTable
                 TextColumn::make('sort_order')->label('Urutan')->numeric()->sortable(),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
-            ->defaultSort('sort_order')
+            ->defaultSort(fn (Builder $query): Builder => $query->orderBy('sort_order')->orderBy('name'))
+            ->reorderable(
+                'sort_order',
+                condition: fn (): bool => CategoryResource::canCreate(),
+            )
+            ->reorderRecordsTriggerAction(
+                fn (Action $action, bool $isReordering): Action => $action
+                    ->label($isReordering ? 'Selesai Mengurutkan' : 'Urutkan Kategori')
+                    ->tooltip('Aktifkan lalu seret baris untuk mengatur urutan kategori yang tampil di POS.'),
+            )
             ->recordActions([
                 EditAction::make()
                     ->visible(fn (Category $record): bool => CategoryResource::canEdit($record)),

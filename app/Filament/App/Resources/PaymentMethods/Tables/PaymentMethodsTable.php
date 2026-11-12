@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources\PaymentMethods\Tables;
 
 use App\Filament\App\Resources\PaymentMethods\PaymentMethodResource;
 use App\Models\PaymentMethod;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -11,6 +12,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PaymentMethodsTable
 {
@@ -25,7 +27,16 @@ class PaymentMethodsTable
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
                 TextColumn::make('sort_order')->label('Urutan')->numeric(),
             ])
-            ->defaultSort('sort_order')
+            ->defaultSort(fn (Builder $query): Builder => $query->orderBy('sort_order')->orderBy('name'))
+            ->reorderable(
+                'sort_order',
+                condition: fn (): bool => PaymentMethodResource::canCreate(),
+            )
+            ->reorderRecordsTriggerAction(
+                fn (Action $action, bool $isReordering): Action => $action
+                    ->label($isReordering ? 'Selesai Mengurutkan' : 'Urutkan Metode')
+                    ->tooltip('Aktifkan lalu seret baris untuk mengatur urutan metode bayar di POS.'),
+            )
             ->recordActions([
                 EditAction::make()
                     ->visible(fn (PaymentMethod $record): bool => PaymentMethodResource::canEdit($record)),
