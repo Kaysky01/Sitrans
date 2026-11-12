@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Modules\Pos\Actions\CompleteOrderAction;
 use App\Modules\Pos\Actions\VerifySupervisorPinAction;
 use App\Modules\Pos\Actions\VoidOrderAction;
+use App\Modules\Pos\Enums\OrderFulfillmentStatus;
 use App\Modules\Pos\Enums\OrderStatus;
 use App\Support\Format;
 use Filament\Actions\Action;
@@ -40,6 +41,9 @@ class OrdersTable
                         OrderStatus::Voided => 'danger',
                         OrderStatus::Refunded => 'gray',
                     }),
+                TextColumn::make('fulfillment_status')->label('Pesanan')->badge()
+                    ->formatStateUsing(fn (?OrderFulfillmentStatus $state): string => $state?->label() ?? 'Pesanan Baru')
+                    ->color(fn (?OrderFulfillmentStatus $state): string => $state?->color() ?? 'warning'),
                 TextColumn::make('grand_total')->label('Total')
                     ->formatStateUsing(fn ($state): string => Format::rupiah($state))
                     ->alignEnd(),
@@ -48,9 +52,14 @@ class OrdersTable
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label('Status pembayaran')
                     ->options(collect(OrderStatus::cases())->mapWithKeys(
                         fn (OrderStatus $status) => [$status->value => $status->label()]
+                    )->all()),
+                SelectFilter::make('fulfillment_status')
+                    ->label('Status pesanan')
+                    ->options(collect(OrderFulfillmentStatus::cases())->mapWithKeys(
+                        fn (OrderFulfillmentStatus $status) => [$status->value => $status->label()]
                     )->all()),
             ])
             ->recordActions([
@@ -77,7 +86,11 @@ class OrdersTable
                                         OrderStatus::Refunded => 'gray',
                                     }),
                                 TextEntry::make('type')->label('Tipe pesanan')
-                                    ->formatStateUsing(fn ($state): string => $state?->shortLabel() ?? '-'),
+                                    ->formatStateUsing(fn ($state): string => $state?->label() ?? '-'),
+                                TextEntry::make('fulfillment_status')->label('Status pesanan')
+                                    ->badge()
+                                    ->formatStateUsing(fn (?OrderFulfillmentStatus $state): string => $state?->label() ?? 'Pesanan Baru')
+                                    ->color(fn (?OrderFulfillmentStatus $state): string => $state?->color() ?? 'warning'),
                                 TextEntry::make('created_at')->label('Dibuat pada')->dateTime('d M Y, H:i'),
                                 TextEntry::make('cashier.name')->label('Kasir')->placeholder('-'),
                                 TextEntry::make('customer_name')->label('Pelanggan')->placeholder('Pelanggan langsung'),

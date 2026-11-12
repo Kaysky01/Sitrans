@@ -285,10 +285,15 @@
                         <select wire:model.live="type" required
                             class="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm font-semibold text-slate-800 focus:border-navy-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-navy-500/20 dark:border-cream-100/10 dark:bg-espresso-800 dark:text-cream-100">
                             <option value="" disabled selected>Pilih tipe pesanan…</option>
-                            <option value="dine_in">Makan di Tempat (Dine-in)</option>
-                            <option value="takeaway">Bawa Pulang (Takeaway)</option>
-                            <option value="pickup">Ambil Sendiri (Self-pickup)</option>
+                            <option value="dine_in">Makan di Tempat — disajikan di kafe</option>
+                            <option value="takeaway">Take Away — dibungkus &amp; langsung dibawa</option>
+                            <option value="pickup">Pickup — dipesan sekarang, diambil nanti</option>
                         </select>
+                        @if ($type !== '')
+                            <p class="mt-1 text-[11px] text-slate-500 dark:text-cream-300">
+                                {{ \App\Modules\Pos\Enums\OrderType::from($type)->description() }}
+                            </p>
+                        @endif
                         @error('type') <p class="mt-1 text-xs font-semibold text-danger-600">{{ $message }}</p> @enderror
                     </div>
 

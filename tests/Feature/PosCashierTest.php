@@ -149,15 +149,19 @@ it('requires a choice from a required modifier group and applies variant price',
     expect((float) $item->unit_price)->toBe(30000.0);
 });
 
-it('blocks adding items before order type and customer name are provided', function () {
+it('allows filling the cart first but blocks payment until order type and customer name are provided', function () {
     $product = Product::factory()->create(['tenant_id' => $this->tenant->getKey(), 'price' => 20000]);
 
-    Livewire::actingAs($this->owner)
+    $component = Livewire::actingAs($this->owner)
         ->test(Cashier::class)
         ->call('chooseProduct', $product->getKey())
+        ->assertHasNoErrors()
+        ->assertSet('showCart', true)
+        ->call('openPaymentModal')
         ->assertHasErrors(['orderType', 'customerName']);
 
-    expect(Order::query()->count())->toBe(0);
+    expect(Order::query()->count())->toBe(1)
+        ->and(Order::query()->firstOrFail()->items()->count())->toBe(1);
 });
 
 it('requires a table number for dine-in orders', function () {
@@ -171,12 +175,14 @@ it('requires a table number for dine-in orders', function () {
         ->set('customerName', 'Rara')
         ->set('tableNumber', '')
         ->call('chooseProduct', $product->getKey())
+        ->assertHasNoErrors()
+        ->call('openPaymentModal')
         ->assertHasErrors('tableNumber');
 
-    expect(Order::query()->count())->toBe(0);
+    expect(Order::query()->count())->toBe(1);
 
     $component->set('tableNumber', '07')
-        ->call('chooseProduct', $product->getKey())
+        ->call('openPaymentModal')
         ->assertHasNoErrors();
 
     $order = Order::query()->latest('id')->firstOrFail();

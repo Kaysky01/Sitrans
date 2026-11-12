@@ -56,6 +56,14 @@ class Cashier extends Component
     /** Catatan bebas untuk dapur (opsional). */
     public string $orderNotes = '';
 
+    /** Drawer keranjang untuk tablet/HP. */
+    public bool $showCart = false;
+
+    /** Toast ringan karena layar POS memakai layout kiosk sendiri. */
+    public ?string $toastMessage = null;
+
+    public string $toastType = 'success';
+
     public bool $showProductModal = false;
 
     public ?int $modalProductId = null;
@@ -165,6 +173,42 @@ class Cashier extends Component
     }
 
     /**
+     * Langkah alur kasir: 1 pilih menu, 2 lengkapi detail, 3 bayar, 4 selesai.
+     */
+    #[Computed]
+    public function currentStep(): int
+    {
+        if ($this->order === null || $this->order->items->isEmpty()) {
+            return 1;
+        }
+
+        if (! $this->detailsCompleted()) {
+            return 2;
+        }
+
+        return 3;
+    }
+
+    #[Computed]
+    public function stepHint(): string
+    {
+        return match ($this->currentStep) {
+            1 => 'Sentuh menu di sebelah kiri untuk mulai mengisi keranjang.',
+            2 => 'Lengkapi tipe pesanan dan nama pelanggan sebelum membayar.',
+            default => 'Periksa keranjang, lalu tekan tombol Bayar.',
+        };
+    }
+
+    public function detailsCompleted(): bool
+    {
+        if ($this->orderType === '' || trim($this->customerName) === '') {
+            return false;
+        }
+
+        return $this->orderType !== 'dine_in' || trim($this->tableNumber) !== '';
+    }
+
+    /**
      * @return Collection<int, Category>
      */
     #[Computed]
@@ -226,6 +270,32 @@ class Cashier extends Component
         $this->categoryId = $categoryId;
     }
 
+    public function toggleCart(): void
+    {
+        $this->showCart = ! $this->showCart;
+    }
+
+    public function openCart(): void
+    {
+        $this->showCart = true;
+    }
+
+    public function closeCart(): void
+    {
+        $this->showCart = false;
+    }
+
+    public function toast(string $message, string $type = 'success'): void
+    {
+        $this->toastMessage = $message;
+        $this->toastType = $type;
+    }
+
+    public function clearToast(): void
+    {
+        $this->toastMessage = null;
+    }
+
     /**
      * Category rail icon (SVG path), matched loosely from the category name
      * so common cafe menu groups get a recognizable glyph in the POS rail.
@@ -281,6 +351,8 @@ class Cashier extends Component
         ]);
 
         $this->recalculate();
+        $this->showCart = true;
+        $this->toast($bundle->name.' ditambahkan ke keranjang.');
     }
 
     public function confirmProduct(): void
@@ -354,6 +426,8 @@ class Cashier extends Component
         if ($this->order?->items->isEmpty()) {
             $this->orderId = null;
         }
+
+        $this->toast('Item dihapus dari keranjang.');
     }
 
     public function updatedOrderType(): void
@@ -395,7 +469,8 @@ class Cashier extends Component
     private function saveOrderDetails(): void
     {
         $this->order?->fill([
-            'customer_name' => $this->customerName,
+            'type' => $this->orderType !== '' ? OrderType::from($this->orderType) : null,
+            'customer_name' => $this->customerName !== '' ? $this->customerName : null,
             'table_number' => $this->orderType === 'dine_in' && $this->tableNumber !== ''
                 ? $this->tableNumber
                 : null,
@@ -445,12 +520,28 @@ class Cashier extends Component
 
         $this->showDiscountModal = false;
         $this->discountPin = '';
+        $this->toast('Diskon berhasil diterapkan.');
     }
 
     public function openPaymentModal(): void
     {
         if ($this->order === null || $this->order->items->isEmpty()) {
+            $this->toast('Keranjang masih kosong. Pilih menu terlebih dahulu.', 'error');
+
             return;
+        }
+
+        try {
+            $this->validate(self::detailRules(), [], [
+                'orderType' => 'tipe pesanan',
+                'customerName' => 'nama pelanggan',
+                'tableNumber' => 'nomor meja',
+            ]);
+        } catch (ValidationException $exception) {
+            $this->toast('Lengkapi tipe pesanan dan nama pelanggan sebelum membayar.', 'error');
+            $this->showCart = true;
+
+            throw $exception;
         }
 
         $this->paymentMethodId = $this->paymentMethods->first()?->getKey();
@@ -458,6 +549,7 @@ class Cashier extends Component
         $this->reference = null;
         $this->extraPayments = [];
         $this->showPaymentModal = true;
+        $this->showCart = false;
         $this->resetErrorBag();
     }
 
@@ -565,8 +657,9 @@ class Cashier extends Component
     public function newOrder(): void
     {
         $this->orderId = null;
-        $this->reset(['orderType', 'customerName', 'tableNumber', 'orderNotes']);
+        $this->reset(['orderType', 'customerName', 'tableNumber', 'orderNotes', 'showCart']);
         $this->resetErrorBag();
+        $this->toast('Pesanan baru siap. Silakan pilih menu.');
     }
 
     public function openShift(): void
@@ -585,6 +678,7 @@ class Cashier extends Component
         $this->showShiftModal = false;
         $this->openingFloat = 0;
         unset($this->shift);
+        $this->toast('Shift kasir berhasil dibuka.');
     }
 
     public function closeShift(): void
@@ -603,6 +697,7 @@ class Cashier extends Component
         $this->showCloseShiftModal = false;
         $this->reset('countedCash', 'shiftNotes');
         unset($this->shift);
+        $this->toast('Shift kasir ditutup dan rekap tersimpan.');
     }
 
     private function openProductModal(Product $product): void
@@ -649,6 +744,8 @@ class Cashier extends Component
         ]);
 
         $this->recalculate();
+        $this->showCart = true;
+        $this->toast($product->name.' ditambahkan ke keranjang.');
     }
 
     private function ensureOrder(): Order
@@ -657,21 +754,19 @@ class Cashier extends Component
             return $this->order;
         }
 
-        // Pesanan baru wajib diawali pemilihan tipe + nama pelanggan,
-        // nomor meja wajib untuk Dine In.
-        $this->validate(self::detailRules());
-
         $outlet = $this->outlet;
 
         if ($outlet === null) {
             throw ValidationException::withMessages(['search' => 'Outlet belum dikonfigurasi.']);
         }
 
+        // Keranjang boleh diisi lebih dulu. Tipe & nama pelanggan baru wajib
+        // saat kasir membuka pembayaran.
         $order = app(CreateOrderAction::class)->execute(
             $outlet,
             [
-                'type' => OrderType::from($this->orderType),
-                'customer_name' => $this->customerName,
+                'type' => $this->orderType !== '' ? OrderType::from($this->orderType) : null,
+                'customer_name' => $this->customerName !== '' ? $this->customerName : null,
                 'notes' => $this->orderNotes !== '' ? $this->orderNotes : null,
                 'table_number' => $this->orderType === 'dine_in' && $this->tableNumber !== ''
                     ? $this->tableNumber

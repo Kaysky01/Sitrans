@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Modules\Pos\Enums\DiscountType;
 use App\Modules\Pos\Enums\OrderChannel;
+use App\Modules\Pos\Enums\OrderFulfillmentStatus;
 use App\Modules\Pos\Enums\OrderStatus;
 use App\Modules\Pos\Enums\OrderType;
 use App\Support\Tenant\BelongsToTenant;
@@ -17,10 +18,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'outlet_id', 'cash_shift_id', 'user_id', 'number', 'channel', 'type', 'status', 'customer_name', 'table_number',
+    'outlet_id', 'cash_shift_id', 'user_id', 'number', 'channel', 'type', 'status',
+    'fulfillment_status', 'customer_name', 'table_number',
     'subtotal', 'discount_total', 'discount_type', 'discount_value',
     'tax_amount', 'service_amount', 'grand_total', 'paid_total', 'change_total',
-    'notes', 'ordered_at', 'paid_at', 'voided_by', 'voided_at', 'void_reason',
+    'notes', 'ordered_at', 'paid_at', 'accepted_at', 'processing_started_at', 'fulfilled_at',
+    'voided_by', 'voided_at', 'void_reason',
 ])]
 class Order extends Model
 {
@@ -36,6 +39,7 @@ class Order extends Model
             'channel' => OrderChannel::class,
             'type' => OrderType::class,
             'status' => OrderStatus::class,
+            'fulfillment_status' => OrderFulfillmentStatus::class,
             'discount_type' => DiscountType::class,
             'subtotal' => 'float',
             'discount_total' => 'float',
@@ -47,6 +51,9 @@ class Order extends Model
             'change_total' => 'float',
             'ordered_at' => 'datetime',
             'paid_at' => 'datetime',
+            'accepted_at' => 'datetime',
+            'processing_started_at' => 'datetime',
+            'fulfilled_at' => 'datetime',
             'voided_at' => 'datetime',
         ];
     }
@@ -107,6 +114,25 @@ class Order extends Model
     public function isVoided(): bool
     {
         return $this->status === OrderStatus::Voided;
+    }
+
+    /**
+     * Pesanan masih berjalan dan perlu ditangani staf.
+     */
+    public function isActiveForFulfillment(): bool
+    {
+        return ! $this->isVoided()
+            && $this->status !== OrderStatus::Refunded
+            && $this->fulfillment_status !== OrderFulfillmentStatus::Completed;
+    }
+
+    /**
+     * @param  Builder<Order>  $query
+     */
+    public function scopeActiveFulfillment(Builder $query): void
+    {
+        $query->whereNotIn('status', [OrderStatus::Voided, OrderStatus::Refunded])
+            ->where('fulfillment_status', '!=', OrderFulfillmentStatus::Completed);
     }
 
     /**

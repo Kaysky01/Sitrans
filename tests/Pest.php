@@ -9,8 +9,8 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 
 /**
- * Mulai pesanan di kasir: tipe pesanan + nama pelanggan wajib diisi
- * sebelum item pertama dapat ditambahkan ke keranjang.
+ * Lengkapi detail pesanan kasir (tipe, nama pelanggan, nomor meja).
+ * Item boleh masuk keranjang lebih dulu; detail divalidasi saat pembayaran.
  */
 function startCashierOrder(Testable $component): Testable
 {

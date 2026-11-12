@@ -18,7 +18,7 @@ final class CreateOrderAction
     public function __construct(private readonly OrderNumberGenerator $numbers) {}
 
     /**
-     * @param  array{channel?: OrderChannel, type?: OrderType, customer_name?: string|null, table_number?: string|null, notes?: string|null}  $attributes
+     * @param  array{channel?: OrderChannel, type?: OrderType|null, customer_name?: string|null, table_number?: string|null, notes?: string|null}  $attributes
      */
     public function execute(Outlet $outlet, array $attributes = [], ?User $cashier = null): Order
     {
@@ -27,7 +27,9 @@ final class CreateOrderAction
             'user_id' => $cashier?->getKey(),
             'number' => $this->numbers->generate($outlet),
             'channel' => $attributes['channel'] ?? OrderChannel::Offline,
-            'type' => $attributes['type'] ?? OrderType::DineIn,
+            // Tipe boleh kosong saat keranjang masih diisi; kasir memvalidasinya
+            // sebelum pembayaran dimulai.
+            'type' => $attributes['type'] ?? null,
             'status' => OrderStatus::Open,
             'customer_name' => $attributes['customer_name'] ?? null,
             'table_number' => $attributes['table_number'] ?? null,

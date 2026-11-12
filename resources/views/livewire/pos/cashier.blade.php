@@ -28,6 +28,21 @@
         </a>
     </header>
 
+    <!-- Toast ringan untuk aksi kasir -->
+    @if ($toastMessage)
+        <div x-data="{ show: true }" x-init="setTimeout(() => { show = false; $wire.clearToast(); }, 4000)" x-show="show"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+            @class([
+                'fixed right-4 top-4 z-[70] flex max-w-xs items-start gap-2 rounded-2xl px-4 py-3 text-xs font-bold shadow-xl ring-1',
+                'bg-emerald-50 text-emerald-800 ring-emerald-500/30' => $toastType === 'success',
+                'bg-rose-50 text-rose-800 ring-rose-500/30' => $toastType !== 'success',
+            ])>
+            <span>{{ $toastType === 'success' ? '✓' : '!' }}</span>
+            <span class="flex-1">{{ $toastMessage }}</span>
+            <button type="button" wire:click="clearToast" class="opacity-60 hover:opacity-100" aria-label="Tutup notifikasi">✕</button>
+        </div>
+    @endif
+
     <!-- Toolbar -->
     <div class="flex h-16 shrink-0 items-center gap-2 bg-white px-3.5 sm:gap-3.5 sm:px-5 dark:border-slate-800 dark:bg-slate-900">
         <div class="max-[440px]:hidden">
@@ -60,9 +75,9 @@
                 </button>
             @endif
 
-            <!-- Cart summary chip: opens the mobile cart drawer -->
-            <label for="cart-drawer-toggle"
-                class="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white text-slate-700 shadow-sm ring-1 ring-slate-900/10 transition hover:bg-slate-50 lg:pointer-events-none dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
+            <!-- Tombol keranjang: membuka drawer di tablet/HP, tetap terlihat di desktop -->
+            <button type="button" wire:click="toggleCart" title="Buka keranjang pesanan" aria-label="Buka keranjang pesanan"
+                class="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm ring-1 ring-slate-900/10 transition hover:bg-slate-50 lg:hidden dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
                 <x-filament::icon icon="heroicon-o-shopping-cart" class="h-5 w-5" />
                 @php($cartCount = $this->order?->items?->count() ?? 0)
                 @if ($cartCount > 0)
@@ -70,7 +85,7 @@
                         {{ $cartCount }}
                     </span>
                 @endif
-            </label>
+            </button>
 
             <!-- Signed-in user -->
             <div class="hidden items-center gap-2.5 lg:flex">
@@ -86,8 +101,10 @@
     </div>
 
     <!-- Main POS Interface: katalog penuh; keranjang jadi bottom-sheet di layar < xl -->
-    <div class="flex min-h-0 flex-1 overflow-hidden">
-        <input type="checkbox" id="cart-drawer-toggle" class="peer sr-only xl:hidden" aria-label="Buka atau tutup keranjang">
+    <div class="relative flex min-h-0 flex-1 overflow-hidden">
+        @if ($showCart)
+            <div wire:click="closeCart" class="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-xs xl:hidden" aria-hidden="true"></div>
+        @endif
 
         <!-- Category rail (desktop) -->
         <nav class="hidden w-24 shrink-0 flex-col gap-2.5 overflow-y-auto p-3 scrollbar-none xl:flex" aria-label="Kategori menu">
@@ -215,8 +232,11 @@
         </section>
 
         <!-- Floating cart bar (mobile/tablet < xl): opens the cart bottom-sheet -->
-        <label for="cart-drawer-toggle"
-            class="fixed inset-x-3 bottom-3 z-30 flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-navy-900 px-4 py-3 text-xs font-bold text-white shadow-2xl shadow-navy-900/40 ring-1 ring-white/10 backdrop-blur transition hover:bg-navy-700 peer-checked:pointer-events-none peer-checked:opacity-0 xl:hidden">
+        <button type="button" wire:click="toggleCart"
+            @class([
+                'fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-3 rounded-2xl bg-navy-900 px-4 py-3 text-left text-xs font-bold text-white shadow-2xl shadow-navy-900/40 ring-1 ring-white/10 backdrop-blur transition hover:bg-navy-700 xl:hidden',
+                'pointer-events-none opacity-0' => $showCart,
+            ])>
             <span class="flex items-center gap-2.5">
                 <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-200/20 text-base">🛒</span>
                 <span>
@@ -227,24 +247,56 @@
             <span class="flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-[11px] font-extrabold text-navy-900">
                 Lihat Keranjang ⌃
             </span>
-        </label>
+        </button>
 
         <!-- RIGHT: Order Summary & Cart Panel — bottom-sheet di bawah xl, panel tetap di xl+ -->
-        <aside class="fixed inset-x-0 bottom-0 top-[7.5rem] z-40 flex w-full max-w-sm translate-y-full flex-col rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl shadow-slate-900/25 transition-transform duration-300 ease-out peer-checked:translate-y-0 sm:inset-x-2 sm:rounded-3xl sm:max-w-md dark:border-slate-800 dark:bg-slate-900 xl:static xl:translate-y-0 xl:rounded-none xl:border-l xl:border-t-0 xl:shadow-soft xl:transition-none dark:xl:border-t-0">
+        <aside @class([
+            'fixed inset-x-0 bottom-0 top-[7.5rem] z-40 flex w-full max-w-sm flex-col rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl shadow-slate-900/25 transition-transform duration-300 ease-out sm:inset-x-2 sm:max-w-md sm:rounded-3xl dark:border-slate-800 dark:bg-slate-900 xl:static xl:translate-y-0 xl:rounded-none xl:border-l xl:border-t-0 xl:shadow-soft xl:transition-none dark:xl:border-t-0',
+            'translate-y-0' => $showCart,
+            'translate-y-full' => ! $showCart,
+        ])>
             <!-- Order Header — detail pesanan wajib: tipe, nama pelanggan, meja (Dine In), catatan -->
             <div class="shrink-0 border-b border-slate-100 px-4 pb-3.5 pt-4 dark:border-slate-800 sm:px-5">
+                @php($step = $this->currentStep)
+
                 <div class="flex items-start justify-between gap-3">
-                    <h2 class="font-serif text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        {{ $this->order?->number ? '#'.$this->order->number : 'Pesanan Baru' }}
-                    </h2>
-                    <div class="flex items-center gap-2">
-                        <label for="cart-drawer-toggle"
-                            class="cursor-pointer rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 xl:hidden dark:hover:bg-slate-800"
-                            aria-label="Tutup keranjang">✕</label>
+                    <div>
+                        <h2 class="font-serif text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                            {{ $this->order?->number ? '#'.$this->order->number : 'Pesanan Baru' }}
+                        </h2>
+                        <p class="mt-0.5 text-[11px] font-medium text-slate-400">{{ $this->stepHint }}</p>
                     </div>
+                    <button type="button" wire:click="closeCart"
+                        class="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 xl:hidden dark:hover:bg-slate-800"
+                        aria-label="Tutup keranjang">✕</button>
                 </div>
 
-                <div class="mt-2.5 space-y-2">
+                <!-- Indikator langkah agar alur kasir selalu terlihat -->
+                <ol class="mt-3 flex items-center gap-1" aria-label="Langkah pesanan">
+                    @foreach ([1 => 'Pilih Menu', 2 => 'Detail', 3 => 'Bayar', 4 => 'Selesai'] as $number => $label)
+                        <li class="flex items-center gap-1 {{ $number > 1 ? 'flex-1' : '' }}">
+                            @if ($number > 1)
+                                <span @class(['h-0.5 flex-1 rounded-full', 'bg-navy-500' => $step >= $number, 'bg-slate-200 dark:bg-slate-700' => $step < $number])></span>
+                            @endif
+                            <span @class([
+                                'flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold',
+                                'bg-navy-500 text-white' => $step === $number,
+                                'bg-navy-100 text-navy-800 dark:bg-navy-900 dark:text-navy-200' => $step > $number,
+                                'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500' => $step < $number,
+                            ])>
+                                <span @class([
+                                    'flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black',
+                                    'bg-white/20' => $step === $number,
+                                    'bg-white text-navy-700' => $step > $number,
+                                    'bg-white/70 text-slate-400 dark:bg-slate-700' => $step < $number,
+                                ])>{{ $step > $number ? '✓' : $number }}</span>
+                                <span class="hidden sm:inline">{{ $label }}</span>
+                            </span>
+                        </li>
+                    @endforeach
+                </ol>
+
+                <div class="mt-3 space-y-2">
                     @if ($errors->any())
                         <div class="rounded-xl bg-danger-50 px-3 py-2 dark:bg-navy-900">
                             @foreach ($errors->all() as $error)
@@ -253,10 +305,14 @@
                         </div>
                     @endif
 
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tipe Pesanan <span class="text-danger-600">*</span></p>
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tipe Pesanan <span class="text-danger-600">*</span></p>
+                        <span class="text-[10px] text-slate-400" title="Dine In untuk makan di tempat, Take Away untuk langsung dibawa pulang, Pickup untuk diambil nanti.">Apa bedanya?</span>
+                    </div>
                     <div class="flex flex-wrap items-center gap-1.5">
                         @foreach (\App\Modules\Pos\Enums\OrderType::cases() as $type)
                             <button type="button" wire:click="$set('orderType', '{{ $type->value }}')"
+                                title="{{ $type->label() }} — {{ $type->description() }}"
                                 @class([
                                     'rounded-full px-3.5 py-1.5 text-xs font-bold transition',
                                     'bg-navy-500 text-white shadow-sm shadow-navy-600/20' => $orderType === $type->value,
@@ -266,6 +322,11 @@
                             </button>
                         @endforeach
                     </div>
+                    @if ($orderType !== '')
+                        <p class="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+                            {{ \App\Modules\Pos\Enums\OrderType::from($orderType)->description() }}
+                        </p>
+                    @endif
 
                     <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
                         <label class="block">
@@ -296,7 +357,7 @@
                             🛒
                         </div>
                         <p class="mt-3 text-xs font-bold text-slate-600 dark:text-slate-300">Keranjang kasir masih kosong</p>
-                        <p class="mt-1 text-[11px] text-slate-400">Pilih tipe pesanan &amp; isi nama pelanggan di atas, lalu sentuh menu — keranjang terisi otomatis.</p>
+                        <p class="mt-1 max-w-[16rem] text-center text-[11px] text-slate-400">Sentuh menu untuk menambahkannya. Tipe pesanan dan nama pelanggan dapat dilengkapi setelah keranjang terisi.</p>
                     </div>
                 @else
                     <ul class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -378,11 +439,13 @@
                         % Diskon
                     </button>
                     <button type="button" wire:click="newOrder"
+                        title="Kosongkan keranjang dan mulai pesanan baru"
                         class="rounded-full bg-slate-200/70 px-4 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-300/70 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-                        + Baru
+                        Pesanan Baru
                     </button>
                 </div>
                 <button type="button" wire:click="openPaymentModal" @disabled($this->order === null || $this->order->items->isEmpty())
+                    title="Lanjut ke pembayaran. Lengkapi tipe pesanan dan nama pelanggan terlebih dahulu."
                     class="mt-2.5 flex w-full items-center justify-center gap-2 rounded-full bg-orange-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:bg-orange-600 disabled:opacity-40">
                     <x-filament::icon icon="heroicon-o-credit-card" class="h-5 w-5" />
                     <span>Bayar {{ \App\Support\Format::rupiah($this->order?->grand_total ?? 0) }}</span>

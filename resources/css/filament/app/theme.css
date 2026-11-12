@@ -3,6 +3,7 @@
 @source '../../../../app/Filament/App/**/*';
 @source '../../../../app/Filament/Admin/**/*';
 @source '../../../../resources/views/filament/app/**/*';
+@source '../../../../resources/views/livewire/pos/**/*';
 @source '../../../../resources/views/livewire/outlet-switcher.blade.php';
 
 /* Brand tokens (mirrors resources/css/app.css so panel utilities compile) */
