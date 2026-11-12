@@ -4,6 +4,7 @@ namespace App\Filament\App\Resources\Users\Tables;
 
 use App\Filament\App\Resources\Users\UserResource;
 use App\Models\User;
+use App\Support\Access\RoleDefinitions;
 use App\Support\Tenant\TenantManager;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -27,8 +28,9 @@ class UsersTable
                     ->badge()
                     ->state(function (User $record): string {
                         $tenant = app(TenantManager::class)->current();
+                        $role = $tenant !== null ? $record->roleIn($tenant) : null;
 
-                        return $tenant !== null ? (string) $record->roleIn($tenant) : '-';
+                        return $role !== null ? RoleDefinitions::label($role) : '-';
                     }),
                 IconColumn::make('is_active')
                     ->label('Aktif')

@@ -9,6 +9,7 @@ use App\Filament\App\Resources\Users\Schemas\UserForm;
 use App\Filament\App\Resources\Users\Tables\UsersTable;
 use App\Models\User;
 use App\Support\Access\ChecksResourcePermissions;
+use App\Support\Access\RoleDefinitions;
 use App\Support\Tenant\TenantManager;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -16,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class UserResource extends Resource
 {
@@ -49,6 +51,28 @@ class UserResource extends Resource
 
         return parent::getEloquentQuery()
             ->whereHas('tenants', fn (Builder $query) => $query->whereKey($tenant?->getKey()));
+    }
+
+    /**
+     * Akun pemilik dikelola dari halaman Profil, bukan dari daftar staf.
+     */
+    public static function canEdit(Model $record): bool
+    {
+        return ! static::isTenantOwner($record) && static::allowsResourcePermission('manage');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return ! static::isTenantOwner($record) && static::allowsResourcePermission('manage');
+    }
+
+    protected static function isTenantOwner(Model $record): bool
+    {
+        $tenant = app(TenantManager::class)->current();
+
+        return $record instanceof User
+            && $tenant !== null
+            && $record->roleIn($tenant) === RoleDefinitions::OWNER;
     }
 
     public static function getPages(): array

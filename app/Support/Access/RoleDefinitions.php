@@ -101,7 +101,7 @@ final class RoleDefinitions
     {
         return [
             self::OWNER => 'Pemilik',
-            self::MANAGER => 'Manajer',
+            self::MANAGER => 'Supervisor',
             self::CASHIER => 'Kasir',
             self::KITCHEN => 'Dapur',
         ];

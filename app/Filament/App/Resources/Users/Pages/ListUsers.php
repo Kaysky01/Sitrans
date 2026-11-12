@@ -13,6 +13,10 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         // Sembunyikan tombol tambah bagi role yang tidak dapat mengelola data ini.
-        return static::$resource::canCreate() ? [CreateAction::make()] : [];
+        return static::$resource::canCreate() ? [
+            CreateAction::make()
+                ->label('Tambah Staff')
+                ->tooltip('Buat akun kasir, dapur, atau supervisor. Akun pemilik dikelola lewat halaman Profil.'),
+        ] : [];
     }
 }

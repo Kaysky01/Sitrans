@@ -12,7 +12,11 @@ class UserForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('name')->label('Nama')->required()->maxLength(100),
+            TextInput::make('name')
+                ->label('Nama')
+                ->required()
+                ->maxLength(100)
+                ->helperText('Akun staf untuk kasir, dapur, atau supervisor. Akun pemilik tidak dibuat dari halaman ini.'),
             TextInput::make('email')
                 ->label('Email')
                 ->email()
@@ -22,15 +26,12 @@ class UserForm
             TextInput::make('phone')->label('No. HP')->tel()->maxLength(30),
             Select::make('role')
                 ->label('Peran')
-                ->options([
-                    RoleDefinitions::OWNER => 'Pemilik',
-                    RoleDefinitions::MANAGER => 'Manajer',
-                    RoleDefinitions::CASHIER => 'Kasir',
-                    RoleDefinitions::KITCHEN => 'Dapur',
-                ])
+                ->options(collect(RoleDefinitions::labels())
+                    ->except(RoleDefinitions::OWNER)
+                    ->all())
                 ->default(RoleDefinitions::CASHIER)
                 ->required()
-                ->helperText('Perubahan peran berlaku pada kafe ini.'),
+                ->helperText('Supervisor dapat membuka laporan dan mengelola menu; kasir fokus pada transaksi.'),
             TextInput::make('password')
                 ->label('Kata sandi')
                 ->password()
@@ -41,8 +42,9 @@ class UserForm
             TextInput::make('pin')
                 ->label('PIN supervisor')
                 ->numeric()
+                ->minLength(4)
                 ->maxLength(6)
-                ->helperText('4-6 digit, untuk void/refund. Kosongkan bila tidak diperlukan.')
+                ->helperText('PIN 4-6 digit untuk menyetujui void, refund, atau diskon di kasir. Hanya supervisor dan pemilik yang perlu PIN.')
                 ->dehydrated(fn (?string $state): bool => filled($state)),
         ]);
     }

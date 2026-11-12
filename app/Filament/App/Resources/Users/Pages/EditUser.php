@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\Users\Pages;
 use App\Filament\App\Resources\Users\UserResource;
 use App\Support\Access\RoleDefinitions;
 use App\Support\Tenant\TenantManager;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Spatie\Permission\PermissionRegistrar;
@@ -58,5 +59,15 @@ class EditUser extends EditRecord
         return [
             DeleteAction::make(),
         ];
+    }
+
+    protected function getSaveFormAction(): Action
+    {
+        return parent::getSaveFormAction()->label('Simpan');
+    }
+
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Data staf berhasil disimpan.';
     }
 }

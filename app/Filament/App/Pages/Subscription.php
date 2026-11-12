@@ -3,6 +3,7 @@
 namespace App\Filament\App\Pages;
 
 use App\Models\Tenant;
+use App\Support\Access\RoleDefinitions;
 use App\Support\Tenant\TenantManager;
 use BackedEnum;
 use Filament\Notifications\Notification;
@@ -27,7 +28,20 @@ class Subscription extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->can('settings.manage') ?? false;
+        $user = auth()->user();
+        $tenant = app(TenantManager::class)->current();
+
+        if ($user === null) {
+            return false;
+        }
+
+        // Pengguna tetap bisa melihat status saat langganan berakhir karena
+        // middleware mengarahkan mereka ke halaman ini.
+        if ($tenant !== null && ! $tenant->isActive()) {
+            return true;
+        }
+
+        return $tenant !== null && $user->roleIn($tenant) === RoleDefinitions::OWNER;
     }
 
     #[Computed]

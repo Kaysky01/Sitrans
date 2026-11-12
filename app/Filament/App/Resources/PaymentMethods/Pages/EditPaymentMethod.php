@@ -3,6 +3,7 @@
 namespace App\Filament\App\Resources\PaymentMethods\Pages;
 
 use App\Filament\App\Resources\PaymentMethods\PaymentMethodResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -19,5 +20,15 @@ class EditPaymentMethod extends EditRecord
             ForceDeleteAction::make(),
             RestoreAction::make(),
         ];
+    }
+
+    protected function getSaveFormAction(): Action
+    {
+        return parent::getSaveFormAction()->label('Simpan');
+    }
+
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Metode pembayaran berhasil diperbarui.';
     }
 }
