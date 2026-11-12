@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\Tenant\BelongsToTenant;
+use App\Support\Uploads\ImageUpload;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -144,7 +145,7 @@ class Product extends Model
     public function imageUrl(): string
     {
         if ($this->image_path) {
-            return asset('storage/'.$this->image_path);
+            return (string) ImageUpload::url($this->image_path);
         }
 
         $name = strtolower($this->name);

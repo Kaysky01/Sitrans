@@ -2,7 +2,7 @@
 
 namespace App\Filament\App\Resources\Categories\Schemas;
 
-use Filament\Forms\Components\FileUpload;
+use App\Support\Uploads\ImageUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -17,13 +17,7 @@ class CategoryForm
                 ->required()
                 ->maxLength(100)
                 ->helperText('Contoh: Kopi, Makanan Berat, Camilan. Urutan kategori menentukan urutan di kasir.'),
-            FileUpload::make('image_path')
-                ->label('Foto')
-                ->image()
-                ->imageEditor()
-                ->disk('public')
-                ->directory('categories')
-                ->columnSpanFull(),
+            ImageUpload::make('image_path', 'categories', 'Foto kategori'),
             TextInput::make('sort_order')
                 ->label('Urutan')
                 ->numeric()

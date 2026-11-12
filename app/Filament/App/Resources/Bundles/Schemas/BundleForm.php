@@ -2,7 +2,7 @@
 
 namespace App\Filament\App\Resources\Bundles\Schemas;
 
-use Filament\Forms\Components\FileUpload;
+use App\Support\Uploads\ImageUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -18,7 +18,7 @@ class BundleForm
             Select::make('category_id')->label('Kategori')->relationship('category', 'name')->searchable()->preload(),
             Textarea::make('description')->label('Deskripsi')->rows(3)->columnSpanFull(),
             TextInput::make('price')->label('Harga paket')->numeric()->prefix('Rp')->required()->default(0),
-            FileUpload::make('image_path')->label('Foto')->image()->disk('public')->directory('bundles')->columnSpanFull(),
+            ImageUpload::make('image_path', 'bundles', 'Foto paket'),
             Toggle::make('is_active')->label('Aktif')->default(true),
         ]);
     }

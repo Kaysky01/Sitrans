@@ -4,8 +4,8 @@ namespace App\Filament\App\Resources\Products\Schemas;
 
 use App\Models\Product;
 use App\Support\Format;
+use App\Support\Uploads\ImageUpload;
 use Closure;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -68,15 +68,7 @@ class ProductForm
                 ->formatStateUsing(fn (mixed $state): string => self::formatRupiahInput($state))
                 ->hintIcon('heroicon-o-question-mark-circle', tooltip: 'HPP (Harga Pokok Penjualan) adalah modal bahan per porsi. Nilainya dihitung otomatis dari resep dan pembelian bahan, jadi tidak diisi manual di sini.')
                 ->helperText('Dihitung otomatis dari resep & pembelian bahan.'),
-            FileUpload::make('image_path')
-                ->label('Foto menu')
-                ->image()
-                ->imageEditor()
-                ->disk('public')
-                ->directory('products')
-                ->required()
-                ->helperText('Unggah foto sendiri, atau gunakan tombol "Auto Foto" di daftar menu untuk memilih contoh foto berdasarkan nama menu.')
-                ->columnSpanFull(),
+            ImageUpload::make('image_path', 'products', 'Foto menu', required: true),
             Select::make('unit')
                 ->label('Satuan stok')
                 ->options(Product::units())

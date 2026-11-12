@@ -19,7 +19,7 @@ class CategoriesTable
     {
         return $table
             ->columns([
-                ImageColumn::make('image_path')->label('Foto')->disk('public')->circular(),
+                ImageColumn::make('image_path')->label('Foto')->disk(config('uploads.disk'))->circular(),
                 TextColumn::make('name')->label('Nama')->searchable()->sortable(),
                 TextColumn::make('products_count')->counts('products')->label('Jumlah menu'),
                 TextColumn::make('sort_order')->label('Urutan')->numeric()->sortable(),

@@ -20,7 +20,7 @@ class BundlesTable
     {
         return $table
             ->columns([
-                ImageColumn::make('image_path')->label('Foto')->disk('public')->square()->height(40),
+                ImageColumn::make('image_path')->label('Foto')->disk(config('uploads.disk'))->square()->height(40),
                 TextColumn::make('name')->label('Paket')->searchable()->weight('semibold'),
                 TextColumn::make('items_count')->counts('items')->label('Isi'),
                 TextColumn::make('price')

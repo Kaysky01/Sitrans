@@ -27,7 +27,7 @@ class ProductsTable
             ->columns([
                 ImageColumn::make('image_path')
                     ->label('Foto')
-                    ->disk('public')
+                    ->disk(config('uploads.disk'))
                     ->defaultImageUrl(fn (Product $record): string => $record->imageUrl())
                     ->circular()
                     ->size(46),
