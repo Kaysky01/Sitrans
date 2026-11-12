@@ -57,16 +57,23 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Subtotal Menu</p>
+            <p class="mt-1 text-base font-extrabold text-slate-900">{{ \App\Support\Format::rupiah($summary['subtotal']) }}</p>
+            <p class="mt-0.5 text-[11px] text-slate-500">Sebelum diskon, pajak, dan service.</p>
+        </div>
         @foreach ([
-            ['Diskon Diberikan', \App\Support\Format::rupiah($summary['discounts'])],
-            ['PB1 Terkumpul (10%)', \App\Support\Format::rupiah($summary['tax'])],
-            ['Service Charge', \App\Support\Format::rupiah($summary['service'])],
-            ['Total Omzet Bruto', \App\Support\Format::rupiah($summary['gross'])],
-        ] as [$label, $value])
+            ['Diskon Diberikan', \App\Support\Format::rupiah($summary['discounts']), 'Potongan yang diberikan ke pelanggan.'],
+            ['Penjualan Bersih', \App\Support\Format::rupiah($summary['revenue']), 'Subtotal setelah diskon (pendapatan kafe).'],
+            ['Pajak (PB1/PPN)', \App\Support\Format::rupiah($summary['tax']), 'Pajak daerah yang dipungut dari pelanggan.'],
+            ['Service Charge', \App\Support\Format::rupiah($summary['service']), 'Biaya layanan, dicatat terpisah sebagai titipan.'],
+            ['Total Dibayar', \App\Support\Format::rupiah($summary['gross']), 'Jumlah yang dibayar pelanggan.'],
+        ] as [$label, $value, $hint])
             <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
                 <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ $label }}</p>
                 <p class="mt-1 text-base font-extrabold text-slate-900">{{ $value }}</p>
+                <p class="mt-0.5 text-[11px] text-slate-500">{{ $hint }}</p>
             </div>
         @endforeach
     </div>

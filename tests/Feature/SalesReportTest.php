@@ -55,12 +55,32 @@ it('separates revenue from tax and service, and computes margin', function () {
     $summary = app(SalesSummary::class)->totals(now()->startOfDay(), now()->endOfDay());
 
     expect($summary['orders'])->toBe(2)
+        ->and($summary['subtotal'])->toBe(35000.0)
         ->and($summary['revenue'])->toBe(35000.0)
         ->and($summary['tax'])->toBe(3500.0)
         ->and($summary['cogs'])->toBe(12000.0)
         ->and($summary['gross_margin'])->toBe(23000.0)
         ->and($summary['avg_ticket'])->toBe(17500.0)
         ->and($summary['items_sold'])->toBe(2.0);
+});
+
+it('reports subtotal before discount separately from net revenue', function () {
+    paidOrder([
+        'subtotal' => 100000,
+        'discount_total' => 10000,
+        'tax_amount' => 9000,
+        'service_amount' => 5000,
+        'grand_total' => 104000,
+    ]);
+
+    $summary = app(SalesSummary::class)->totals(now()->startOfDay(), now()->endOfDay());
+
+    expect($summary['subtotal'])->toBe(100000.0)
+        ->and($summary['revenue'])->toBe(90000.0)
+        ->and($summary['discounts'])->toBe(10000.0)
+        ->and($summary['tax'])->toBe(9000.0)
+        ->and($summary['service'])->toBe(5000.0)
+        ->and($summary['gross'])->toBe(104000.0);
 });
 
 it('ignores orders that are not revenue bearing', function () {
@@ -112,7 +132,10 @@ it('narrows the report to a single outlet', function () {
 it('renders the sales report page', function () {
     $this->actingAs($this->owner)
         ->get('/app/sales-report')
-        ->assertSuccessful();
+        ->assertSuccessful()
+        ->assertSee('Subtotal Menu')
+        ->assertSee('Pajak (PB1/PPN)')
+        ->assertSee('Total Dibayar');
 });
 
 it('renders the dashboard with sales widgets', function () {

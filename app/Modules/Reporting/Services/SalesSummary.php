@@ -25,6 +25,7 @@ final class SalesSummary
      * @param  CarbonInterface  $to  inclusive upper bound
      * @return array{
      *     orders: int,
+     *     subtotal: float,
      *     revenue: float,
      *     discounts: float,
      *     tax: float,
@@ -40,6 +41,7 @@ final class SalesSummary
     {
         $row = $this->orderQuery($from, $to, $outletId)
             ->selectRaw('COUNT(*) as orders')
+            ->selectRaw('COALESCE(SUM(subtotal), 0) as subtotal')
             ->selectRaw('COALESCE(SUM(subtotal - discount_total), 0) as revenue')
             ->selectRaw('COALESCE(SUM(discount_total), 0) as discounts')
             ->selectRaw('COALESCE(SUM(tax_amount), 0) as tax')
@@ -57,6 +59,7 @@ final class SalesSummary
 
         return [
             'orders' => $orders,
+            'subtotal' => round((float) ($row->subtotal ?? 0), 2),
             'revenue' => round($revenue, 2),
             'discounts' => (float) ($row->discounts ?? 0),
             'tax' => (float) ($row->tax ?? 0),

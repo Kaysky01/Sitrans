@@ -68,6 +68,8 @@ it('renders a sales CSV export', function () {
 
     expect($csv)->toStartWith("\xEF\xBB\xBF")
         ->toContain('Laporan penjualan')
+        ->toContain('Subtotal menu')
+        ->toContain('Penjualan bersih')
         ->toContain('Laba kotor')
         ->toContain('Penjualan per hari')
         ->toContain('Menu terlaris')
