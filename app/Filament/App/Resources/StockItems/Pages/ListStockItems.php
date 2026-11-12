@@ -6,6 +6,7 @@ use App\Filament\App\Resources\StockItems\StockItemResource;
 use App\Models\Product;
 use App\Modules\Inventory\Enums\StockMovementType;
 use App\Modules\Inventory\Services\StockLedger;
+use App\Support\Format;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -50,6 +51,12 @@ class ListStockItems extends ListRecords
                         ->numeric()
                         ->required()
                         ->minValue(0)
+                        ->step(fn (Get $get): string => Product::query()->find($get('product_id'))?->isFractionalUnit() ? '0.001' : '1')
+                        ->helperText(fn (Get $get): string => ($product = Product::query()->find($get('product_id'))) !== null
+                            ? 'Satuan: '.$product->unitLabel().($product->isFractionalUnit()
+                                ? ' — boleh pecahan, mis. 2,5.'
+                                : ' — isi bilangan bulat, mis. 12.')
+                            : 'Pilih menu terlebih dahulu untuk melihat satuannya.')
                         ->default(0),
                     TextInput::make('reorder_level')
                         ->label('Batas minimum')
@@ -87,7 +94,7 @@ class ListStockItems extends ListRecords
 
                     Notification::make()
                         ->title('Stok tersimpan')
-                        ->body($stock->label().' kini '.$stock->quantity.'.')
+                        ->body($stock->label().' kini '.Format::quantity($stock->quantity, $product->quantityDecimals()).' '.$product->unitLabel().'.')
                         ->success()
                         ->send();
                 }),

@@ -15,7 +15,8 @@ class CategoryForm
             TextInput::make('name')
                 ->label('Nama kategori')
                 ->required()
-                ->maxLength(100),
+                ->maxLength(100)
+                ->helperText('Contoh: Kopi, Makanan Berat, Camilan. Urutan kategori menentukan urutan di kasir.'),
             FileUpload::make('image_path')
                 ->label('Foto')
                 ->image()
@@ -26,7 +27,8 @@ class CategoryForm
             TextInput::make('sort_order')
                 ->label('Urutan')
                 ->numeric()
-                ->default(0),
+                ->default(0)
+                ->helperText('Angka kecil tampil lebih dulu. Bisa juga diatur lewat seret-lepas di daftar kategori.'),
             Toggle::make('is_active')
                 ->label('Aktif')
                 ->default(true),

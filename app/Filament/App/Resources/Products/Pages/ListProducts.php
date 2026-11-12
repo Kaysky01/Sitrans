@@ -21,7 +21,7 @@ class ListProducts extends ListRecords
         return [
             // Sembunyikan tambah & impor bagi role yang tidak dapat mengelola menu;
             // ekspor boleh bagi siapa pun yang dapat melihat.
-            ...(ProductResource::canCreate() ? [CreateAction::make()] : []),
+            ...(ProductResource::canCreate() ? [CreateAction::make()->label('Tambah Menu')] : []),
             Action::make('import')
                 ->label('Impor CSV')
                 ->icon('heroicon-o-arrow-up-tray')

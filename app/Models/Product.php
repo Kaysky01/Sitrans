@@ -11,15 +11,87 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'category_id', 'name', 'sku', 'description', 'price', 'cost',
-    'image_path', 'is_active', 'is_sold_out', 'track_stock', 'sort_order',
+    'image_path', 'is_active', 'is_sold_out', 'track_stock', 'sort_order', 'unit',
 ])]
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
     use BelongsToTenant, HasFactory, SoftDeletes;
+
+    /**
+     * Satuan umum untuk menu F&B. Satuan pecahan memakai tampilan desimal.
+     *
+     * @var array<string, string>
+     */
+    public const UNITS = [
+        'porsi' => 'Porsi',
+        'gelas' => 'Gelas',
+        'botol' => 'Botol',
+        'pcs' => 'Pcs',
+        'pack' => 'Pack',
+        'kg' => 'Kilogram (kg)',
+        'gram' => 'Gram (g)',
+        'liter' => 'Liter (L)',
+        'ml' => 'Mililiter (ml)',
+    ];
+
+    protected static function booted(): void
+    {
+        // SKU opsional: buat otomatis dari nama menu agar katalog tetap rapi.
+        static::saving(function (Product $product): void {
+            if (blank($product->sku)) {
+                $product->sku = static::generateSku($product);
+            }
+        });
+    }
+
+    public static function generateSku(Product $product): string
+    {
+        $base = Str::upper(Str::slug((string) $product->name, '-')) ?: 'MENU';
+        $sku = $base;
+        $suffix = 1;
+
+        while (static::withoutGlobalScopes()
+            ->where('tenant_id', $product->tenant_id)
+            ->where('sku', $sku)
+            ->when($product->exists, fn ($query) => $query->whereKeyNot($product->getKey()))
+            ->exists()
+        ) {
+            $sku = $base.'-'.(++$suffix);
+        }
+
+        return $sku;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function units(): array
+    {
+        return self::UNITS;
+    }
+
+    public function isFractionalUnit(): bool
+    {
+        return in_array($this->unit, ['kg', 'gram', 'liter', 'ml'], true);
+    }
+
+    /**
+     * Jumlah desimal yang masuk akal untuk satuan menu ini.
+     */
+    public function quantityDecimals(): int
+    {
+        return $this->isFractionalUnit() ? 2 : 0;
+    }
+
+    public function unitLabel(): string
+    {
+        return self::UNITS[$this->unit] ?? (string) ($this->unit ?: 'Porsi');
+    }
 
     protected function casts(): array
     {

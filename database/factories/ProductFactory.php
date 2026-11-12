@@ -29,6 +29,7 @@ class ProductFactory extends Factory
             'is_active' => true,
             'is_sold_out' => false,
             'track_stock' => false,
+            'unit' => 'porsi',
             'sort_order' => 0,
         ];
     }

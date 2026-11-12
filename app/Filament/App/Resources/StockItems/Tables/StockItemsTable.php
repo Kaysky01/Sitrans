@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\StockItems\Tables;
 use App\Models\StockItem;
 use App\Modules\Inventory\Enums\StockMovementType;
 use App\Modules\Inventory\Services\StockLedger;
+use App\Support\Format;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -25,8 +26,12 @@ class StockItemsTable
             ->columns([
                 TextColumn::make('product.name')->label('Menu')->searchable()->weight('semibold'),
                 TextColumn::make('variant.name')->label('Variasi')->placeholder('—')->toggleable(),
-                TextColumn::make('quantity')->label('Stok')->numeric(decimalPlaces: 2)->sortable()->alignEnd(),
-                TextColumn::make('reorder_level')->label('Min.')->numeric(decimalPlaces: 2)->alignEnd()->toggleable(),
+                TextColumn::make('quantity')->label('Stok')
+                    ->formatStateUsing(fn (StockItem $record, mixed $state): string => Format::quantity($state, $record->product?->quantityDecimals() ?? 0).' '.($record->product?->unit ?? ''))
+                    ->sortable()->alignEnd(),
+                TextColumn::make('reorder_level')->label('Min.')
+                    ->formatStateUsing(fn (StockItem $record, mixed $state): string => Format::quantity($state, $record->product?->quantityDecimals() ?? 0).' '.($record->product?->unit ?? ''))
+                    ->alignEnd()->toggleable(),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -61,9 +66,10 @@ class StockItemsTable
                             ->label('Jumlah')
                             ->numeric()
                             ->required()
-                            ->helperText(fn (callable $get): string => $get('type') === StockMovementType::Adjustment->value
-                                ? 'Nilai koreksi, boleh negatif (mis. -3).'
-                                : 'Jumlah positif.'),
+                            ->step(fn (StockItem $record): string => $record->product?->isFractionalUnit() ? '0.001' : '1')
+                            ->helperText(fn (StockItem $record, callable $get): string => $get('type') === StockMovementType::Adjustment->value
+                                ? 'Nilai koreksi, boleh negatif (mis. -3). Satuan: '.($record->product?->unitLabel() ?? '-').'.'
+                                : 'Jumlah positif. Satuan: '.($record->product?->unitLabel() ?? '-').'.'),
                         Textarea::make('note')
                             ->label('Catatan')
                             ->rows(2)
@@ -80,7 +86,7 @@ class StockItemsTable
 
                         Notification::make()
                             ->title('Stok diperbarui')
-                            ->body('Sisa stok '.$record->fresh()->quantity.'.')
+                            ->body('Sisa stok '.Format::quantity($record->fresh()->quantity, $record->product?->quantityDecimals() ?? 0).' '.($record->product?->unitLabel() ?? '').'.')
                             ->success()
                             ->send();
                     }),

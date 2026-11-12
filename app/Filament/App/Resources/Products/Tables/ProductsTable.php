@@ -46,6 +46,10 @@ class ProductsTable
                     ->formatStateUsing(fn ($state): string => Format::rupiah($state))
                     ->weight('semibold')
                     ->sortable(),
+                TextColumn::make('unit')
+                    ->label('Satuan')
+                    ->formatStateUsing(fn (Product $record): string => $record->unitLabel())
+                    ->toggleable(),
                 ToggleColumn::make('is_sold_out')->label('Habis'),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
             ])
@@ -57,9 +61,14 @@ class ProductsTable
             ])
             ->recordActions([
                 Action::make('generate_photo')
-                    ->label('Auto Foto')
+                    ->label('Foto Otomatis')
                     ->icon('heroicon-o-sparkles')
                     ->color('success')
+                    ->tooltip('Pilih contoh foto bawaan berdasarkan nama menu (matcha, kopi, croissant, dan seterusnya).')
+                    ->requiresConfirmation()
+                    ->modalHeading('Gunakan foto contoh?')
+                    ->modalDescription('Foto saat ini akan diganti dengan contoh foto yang cocok dengan nama menu. Unggah foto sendiri lewat Edit jika ingin hasil yang lebih tepat.')
+                    ->modalSubmitActionLabel('Gunakan foto contoh')
                     ->visible(fn (Product $record): bool => ProductResource::canEdit($record))
                     ->action(function (Product $record): void {
                         $record->update(['image_path' => static::determinePhotoPath($record)]);
@@ -76,9 +85,14 @@ class ProductsTable
             ])
             ->toolbarActions([
                 Action::make('generate_all_photos')
-                    ->label('Generate Semua Foto')
+                    ->label('Foto Otomatis Semua Menu')
                     ->icon('heroicon-o-sparkles')
                     ->color('primary')
+                    ->tooltip('Isi foto contoh untuk semua menu yang belum punya foto yang cocok, berdasarkan nama menu.')
+                    ->requiresConfirmation()
+                    ->modalHeading('Gunakan foto contoh untuk semua menu?')
+                    ->modalDescription('Semua menu akan memakai contoh foto bawaan sesuai namanya. Foto unggahan yang sudah ada akan diganti.')
+                    ->modalSubmitActionLabel('Ya, gunakan contoh')
                     ->visible(fn (): bool => ProductResource::canCreate())
                     ->action(function (): void {
                         $products = Product::all();
