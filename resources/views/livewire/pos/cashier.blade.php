@@ -2,10 +2,8 @@
     <!-- Top Navigation -->
     <header class="flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
         <a href="/app" class="flex items-center gap-2.5">
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/10 dark:bg-slate-900 dark:text-slate-100">
-                <x-filament::icon icon="heroicon-o-building-storefront" class="h-5 w-5 text-navy-500" />
-            </span>
-            <span class="font-serif text-xl font-black tracking-tight text-navy-900 dark:text-white">Sitrans</span>
+            <img src="{{ asset('images/sitrans-logo.png') }}" alt="Sitrans" class="h-11 w-11 rounded-xl bg-white object-contain p-0.5 shadow-sm ring-1 ring-slate-900/10" />
+            <span class="font-display text-xl font-black tracking-tight text-navy-900 dark:text-white">Sitrans</span>
         </a>
 
         <nav class="hidden items-center gap-1 md:flex">
@@ -75,9 +73,9 @@
                 </button>
             @endif
 
-            <!-- Tombol keranjang: membuka drawer di tablet/HP, tetap terlihat di desktop -->
+            <!-- Tombol keranjang: membuka drawer di tablet/HP (< xl), panel tetap di desktop (xl+) -->
             <button type="button" wire:click="toggleCart" title="Buka keranjang pesanan" aria-label="Buka keranjang pesanan"
-                class="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm ring-1 ring-slate-900/10 transition hover:bg-slate-50 lg:hidden dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
+                class="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-sm ring-1 ring-slate-900/10 transition hover:bg-slate-50 xl:hidden dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700">
                 <x-filament::icon icon="heroicon-o-shopping-cart" class="h-5 w-5" />
                 @php($cartCount = $this->order?->items?->count() ?? 0)
                 @if ($cartCount > 0)
@@ -164,6 +162,7 @@
                     <span class="shrink-0 text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">Promo Paket:</span>
                     @foreach ($this->bundles as $bundle)
                         <button type="button" wire:key="bundle-{{ $bundle->id }}" wire:click="addBundle({{ $bundle->id }})"
+                            wire:loading.attr="disabled" wire:target.delay.300ms="addBundle({{ $bundle->id }})"
                             class="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3.5 py-1.5 text-xs font-bold text-orange-900 ring-1 ring-orange-500/30 transition hover:bg-orange-200 dark:bg-orange-950/40 dark:text-orange-200">
                             <span>🎁 {{ $bundle->name }}</span>
                             <span class="tabular font-black text-orange-700 dark:text-orange-300">&middot; {{ \App\Support\Format::rupiah($bundle->price) }}</span>
@@ -177,6 +176,7 @@
                 @forelse ($this->products as $product)
                     <button type="button" wire:key="product-{{ $product->id }}" wire:click="chooseProduct({{ $product->id }})"
                         @disabled($product->is_sold_out)
+                        wire:loading.attr="disabled" wire:target.delay.300ms="chooseProduct({{ $product->id }})"
                         @class([
                             'group flex flex-col overflow-hidden rounded-2xl bg-white p-3 text-left shadow-sm ring-1 ring-slate-900/5 transition duration-150 hover:shadow-md dark:bg-slate-900 dark:ring-slate-800',
                             'hover:-translate-y-0.5' => ! $product->is_sold_out,
@@ -307,7 +307,7 @@
 
                     <div class="flex items-center justify-between gap-2">
                         <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tipe Pesanan <span class="text-danger-600">*</span></p>
-                        <span class="text-[10px] text-slate-400" title="Dine In untuk makan di tempat, Take Away untuk langsung dibawa pulang, Pickup untuk diambil nanti.">Apa bedanya?</span>
+                        <span class="text-[10px] text-slate-400" title="Dine In: makan di kafe. Take Away: bungkus bawa pulang sekarang. Pickup: pesan duluan, diambil nanti.">Panduan tipe</span>
                     </div>
                     <div class="flex flex-wrap items-center gap-1.5">
                         @foreach (\App\Modules\Pos\Enums\OrderType::cases() as $type)
@@ -439,12 +439,13 @@
                         % Diskon
                     </button>
                     <button type="button" wire:click="newOrder"
-                        title="Kosongkan keranjang dan mulai pesanan baru"
+                        title="Kosongkan keranjang saat ini dan mulai transaksi baru"
                         class="rounded-full bg-slate-200/70 px-4 py-3 text-xs font-bold text-slate-700 transition hover:bg-slate-300/70 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-                        Pesanan Baru
+                        + Transaksi Baru
                     </button>
                 </div>
                 <button type="button" wire:click="openPaymentModal" @disabled($this->order === null || $this->order->items->isEmpty())
+                    wire:loading.attr="disabled" wire:target="openPaymentModal"
                     title="Lanjut ke pembayaran. Lengkapi tipe pesanan dan nama pelanggan terlebih dahulu."
                     class="mt-2.5 flex w-full items-center justify-center gap-2 rounded-full bg-orange-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:bg-orange-600 disabled:opacity-40">
                     <x-filament::icon icon="heroicon-o-credit-card" class="h-5 w-5" />
@@ -524,9 +525,10 @@
                         class="flex-1 rounded-full border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                         Batal
                     </button>
-                    <button type="button" wire:click="confirmProduct"
-                        class="flex-1 rounded-full bg-navy-500 py-2.5 text-xs font-bold text-white shadow-md shadow-navy-600/25 transition hover:bg-navy-900">
-                        Tambahkan ke Pesanan
+                    <button type="button" wire:click="confirmProduct" wire:target="confirmProduct" wire:loading.attr="disabled"
+                        class="flex-1 rounded-full bg-navy-500 py-2.5 text-xs font-bold text-white shadow-md shadow-navy-600/25 transition hover:bg-navy-900 disabled:opacity-60">
+                        <span wire:loading.remove wire:target="confirmProduct">Tambahkan ke Pesanan</span>
+                        <span wire:loading wire:target="confirmProduct">Menyimpan…</span>
                     </button>
                 </div>
             </div>
@@ -559,7 +561,7 @@
                             <label class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">PIN Supervisor</label>
                             <input type="password" wire:model="discountPin" placeholder="Masukkan 4-6 digit PIN"
                                 class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-900 focus:border-navy-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-                            <p class="mt-1 text-[11px] text-orange-600"">Diskon memerlukan otorisasi PIN supervisor.</p>
+                            <p class="mt-1 text-[11px] text-orange-600">Diskon memerlukan otorisasi PIN supervisor.</p>
                             @error('pin') <p class="mt-1 text-xs font-semibold text-danger-600">{{ $message }}</p> @enderror
                         </div>
                     @endif
@@ -569,9 +571,10 @@
                         class="flex-1 rounded-full border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                         Batal
                     </button>
-                    <button type="button" wire:click="applyDiscount"
-                        class="flex-1 rounded-full bg-navy-500 py-2.5 text-xs font-bold text-white shadow-md hover:bg-navy-900">
-                        Terapkan Diskon
+                    <button type="button" wire:click="applyDiscount" wire:target="applyDiscount" wire:loading.attr="disabled"
+                        class="flex-1 rounded-full bg-navy-500 py-2.5 text-xs font-bold text-white shadow-md hover:bg-navy-900 disabled:opacity-60">
+                        <span wire:loading.remove wire:target="applyDiscount">Terapkan Diskon</span>
+                        <span wire:loading wire:target="applyDiscount">Menerapkan…</span>
                     </button>
                 </div>
             </div>
@@ -602,9 +605,10 @@
                         class="flex-1 rounded-full border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                         Batal
                     </button>
-                    <button type="button" wire:click="openShift"
-                        class="flex-1 rounded-full bg-navy-500 py-2.5 text-xs font-bold text-white shadow-md hover:bg-navy-900">
-                        Buka Shift Sekarang
+                    <button type="button" wire:click="openShift" wire:target="openShift" wire:loading.attr="disabled"
+                        class="flex-1 rounded-full bg-navy-500 py-2.5 text-xs font-bold text-white shadow-md hover:bg-navy-900 disabled:opacity-60">
+                        <span wire:loading.remove wire:target="openShift">Buka Shift Sekarang</span>
+                        <span wire:loading wire:target="openShift">Membuka…</span>
                     </button>
                 </div>
             </div>
@@ -637,9 +641,10 @@
                         class="flex-1 rounded-full border border-slate-200 bg-slate-50 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                         Batal
                     </button>
-                    <button type="button" wire:click="closeShift"
-                        class="flex-1 rounded-full bg-danger-600 py-2.5 text-xs font-bold text-white shadow-md hover:bg-danger-700">
-                        Tutup Shift &amp; Rekap
+                    <button type="button" wire:click="closeShift" wire:target="closeShift" wire:loading.attr="disabled"
+                        class="flex-1 rounded-full bg-danger-600 py-2.5 text-xs font-bold text-white shadow-md hover:bg-danger-700 disabled:opacity-60">
+                        <span wire:loading.remove wire:target="closeShift">Tutup Shift &amp; Rekap</span>
+                        <span wire:loading wire:target="closeShift">Menutup…</span>
                     </button>
                 </div>
             </div>
@@ -767,11 +772,13 @@
                         class="flex-1 rounded-full border border-slate-200 bg-slate-50 py-3 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                         Batal
                     </button>
-                    <button type="button" wire:click="pay"
-                        class="flex-[2] rounded-full bg-navy-500 py-3 text-sm font-black text-white shadow-lg shadow-navy-600/25 hover:bg-navy-900">
-                        Selesaikan &amp; Cetak Struk
+                    <button type="button" wire:click="pay" wire:target="pay" wire:loading.attr="disabled"
+                        class="flex-[2] rounded-full bg-navy-500 py-3 text-sm font-black text-white shadow-lg shadow-navy-600/25 hover:bg-navy-900 disabled:opacity-60">
+                        <span wire:loading.remove wire:target="pay">Selesaikan &amp; Cetak Struk</span>
+                        <span wire:loading wire:target="pay">Memproses pembayaran…</span>
                     </button>
                 </div>
+                @error('items') <p class="mt-2 text-xs font-semibold text-danger-600">{{ $message }}</p> @enderror
             </div>
         </div>
     @endif

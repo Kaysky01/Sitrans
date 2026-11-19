@@ -55,6 +55,20 @@
     border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
 }
 
+/* Navigation reads as a work queue: each group is an operational area. */
+.fi-sidebar-group-label {
+    margin-top: 0.75rem;
+    color: #94a3b8 !important;
+    font-size: 0.625rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+}
+
+.fi-sidebar-item {
+    margin-block: 0.125rem;
+}
+
 .fi-sidebar-item-active .fi-sidebar-item-btn {
     background: linear-gradient(135deg, rgba(11, 37, 69, 0.12), rgba(49, 71, 105, 0.08)) !important;
     color: #0b2545 !important;
@@ -76,11 +90,64 @@
     color: #0b2545 !important;
 }
 
+.fi-sidebar-item-btn:focus-visible,
+.fi-btn:focus-visible,
+.fi-input:focus-visible,
+.fi-select-input:focus-visible {
+    outline: 3px solid rgba(226, 114, 91, 0.32) !important;
+    outline-offset: 2px !important;
+}
+
 /* Main Content Area */
 .fi-main {
     background:
         radial-gradient(circle at 100% 0%, rgba(194, 211, 232, 0.36), transparent 28rem),
+        radial-gradient(circle at 5% 85%, rgba(226, 114, 91, 0.08), transparent 24rem),
         #f6f8fc !important;
+}
+
+/* Dashboard visual system: deliberately abstract, so it enriches the page
+ * without a remote image, loading delay, or competing with operational data. */
+.dashboard-hero {
+    background:
+        linear-gradient(125deg, #001026 0%, #0b2545 51%, #16406f 100%);
+}
+
+.dashboard-hero__grid {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.065) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.065) 1px, transparent 1px);
+    background-position: center;
+    background-size: 28px 28px;
+    mask-image: linear-gradient(90deg, black, transparent 82%);
+    opacity: 0.7;
+}
+
+.dashboard-hero__orb {
+    border-radius: 9999px;
+    filter: blur(2px);
+}
+
+.dashboard-hero__orb--coral {
+    top: -5rem;
+    right: 3rem;
+    width: 15rem;
+    height: 15rem;
+    background: radial-gradient(circle, rgba(226, 114, 91, 0.72), rgba(226, 114, 91, 0));
+}
+
+.dashboard-hero__orb--blue {
+    bottom: -8rem;
+    left: 32%;
+    width: 18rem;
+    height: 18rem;
+    background: radial-gradient(circle, rgba(154, 180, 216, 0.32), rgba(154, 180, 216, 0));
+}
+
+.dashboard-hero__stamp {
+    transform: rotate(-16deg);
+    background: rgba(255, 255, 255, 0.035);
+    box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.025);
 }
 
 .fi-page,
@@ -116,6 +183,12 @@
     background-color: #ffffff !important;
 }
 
+.fi-wi-stats-overview-stat:hover {
+    border-color: rgba(194, 211, 232, 1) !important;
+    box-shadow: 0 10px 28px -20px rgba(11, 37, 69, 0.35) !important;
+    transform: translateY(-1px);
+}
+
 /* Tables */
 .fi-ta-table {
     border-radius: 1rem !important;
@@ -141,6 +214,15 @@
     font-weight: 800 !important;
     letter-spacing: 0.05em !important;
     text-transform: uppercase !important;
+}
+
+.fi-ta-cell {
+    padding-block: 0.875rem !important;
+}
+
+.fi-ta-empty-state-heading {
+    color: #071a30 !important;
+    font-weight: 800 !important;
 }
 
 .fi-ta-row {
@@ -174,6 +256,19 @@
 .fi-fo-field-wrp select,
 .fi-fo-field-wrp textarea {
     border-radius: 0.75rem !important;
+}
+
+.fi-fo-field-wrp-label,
+.fi-ta-filters-label {
+    color: #334155 !important;
+    font-size: 0.75rem !important;
+    font-weight: 750 !important;
+}
+
+.fi-ta-filters {
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    border-radius: 1rem !important;
+    background: #f8fafc !important;
 }
 
 .fi-modal-window {

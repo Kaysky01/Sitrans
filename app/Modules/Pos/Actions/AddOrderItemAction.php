@@ -2,6 +2,7 @@
 
 namespace App\Modules\Pos\Actions;
 
+use App\Exceptions\ValidationError;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Modules\Pos\Support\Money;
@@ -43,6 +44,22 @@ final class AddOrderItemAction
         $unitPrice = Money::round($data['unit_price'] + $modifierTotal);
         $quantity = (float) ($data['quantity'] ?? 1);
         $discount = Money::round($data['discount_amount'] ?? 0);
+
+        if ($quantity <= 0) {
+            throw ValidationError::with('quantity', 'Jumlah pesanan minimal 1.', 'JUMLAH_TIDAK_VALID');
+        }
+
+        if ($quantity > 999) {
+            throw ValidationError::with('quantity', 'Jumlah pesanan terlalu besar (maksimal 999).', 'JUMLAH_TIDAK_VALID');
+        }
+
+        if ($unitPrice < 0) {
+            throw ValidationError::with('unit_price', 'Harga item tidak boleh negatif.', 'HARGA_TIDAK_VALID');
+        }
+
+        if ($discount < 0) {
+            throw ValidationError::with('discount_amount', 'Diskon item tidak boleh negatif.', 'DISKON_TIDAK_VALID');
+        }
 
         $item = $order->items()->create([
             'product_id' => $data['product_id'] ?? null,

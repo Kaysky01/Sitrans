@@ -27,8 +27,8 @@ class ModifiersRelationManager extends RelationManager
         return $schema->components([
             TextInput::make('name')->label('Nama opsi')->required()->maxLength(80)
                 ->placeholder('Less sugar / Extra shot'),
-            TextInput::make('price')->label('Tambahan harga')->numeric()->prefix('Rp')->default(0),
-            TextInput::make('sort_order')->label('Urutan')->numeric()->default(0),
+            TextInput::make('price')->label('Tambahan harga')->numeric()->prefix('Rp')->default(0)->placeholder('5000')->helperText('Biaya tambahan untuk opsi ini (0 jika gratis).'),
+            TextInput::make('sort_order')->label('Urutan')->numeric()->default(0)->helperText('Angka kecil tampil lebih dulu.'),
             Toggle::make('is_active')->label('Aktif')->default(true),
         ]);
     }

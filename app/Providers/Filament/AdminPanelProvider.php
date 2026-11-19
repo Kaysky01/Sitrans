@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\RateLimitedLogin;
 use App\Http\Middleware\BypassTenantScope;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -28,7 +29,9 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->viteTheme('resources/css/filament/app/theme.css')
             ->brandName('Sitrans Admin')
-            ->login()
+            ->brandLogo(asset('images/sitrans-logo.png'))
+            ->brandLogoHeight('3rem')
+            ->login(RateLimitedLogin::class)
             ->colors([
                 // Brand scale (matches app panel, generated from #0b2545)
                 'primary' => [

@@ -44,7 +44,7 @@ class UserForm
                 ->numeric()
                 ->minLength(4)
                 ->maxLength(6)
-                ->helperText('PIN 4-6 digit untuk menyetujui void, refund, atau diskon di kasir. Hanya supervisor dan pemilik yang perlu PIN.')
+                ->helperText('PIN 4-6 digit angka untuk otorisasi diskon besar atau pembatalan transaksi (void) di kasir. Hanya akun Supervisor & Pemilik yang membutuhkan PIN.')
                 ->dehydrated(fn (?string $state): bool => filled($state)),
         ]);
     }

@@ -13,9 +13,9 @@
         <div id="struk" class="rounded-3xl border border-slate-200/80 bg-white p-6 font-mono text-sm text-slate-800 shadow-xl dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
             <!-- Receipt Header -->
             <div class="text-center">
-                <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white font-black text-sm">
-                    ☕
-                </div>
+                @if ($receipt?->show_logo ?? true)
+                    <img src="{{ asset('images/sitrans-logo.png') }}" alt="Sitrans" class="mx-auto mb-2 h-14 w-14 object-contain" />
+                @endif
                 <p class="font-display text-base font-black uppercase tracking-wider text-slate-900 dark:text-white">
                     {{ $receipt?->header ?? $order->outlet?->name }}
                 </p>
@@ -128,12 +128,20 @@
                 </div>
             @endif
 
+            @if ($sendError)
+                <div class="flex items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 dark:border-rose-500/40 dark:bg-rose-950/40 dark:text-rose-300">
+                    <span>{{ $sendError }}</span>
+                    <button type="button" wire:click="sendEmail" class="shrink-0 underline hover:no-underline">Coba lagi</button>
+                </div>
+            @endif
+
             <form wire:submit="sendEmail" class="flex gap-2">
                 <input type="email" wire:model="email" placeholder="Kirim ke email pelanggan..."
                     class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-navy-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
-                <button type="submit"
-                    class="shrink-0 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700">
-                    Kirim Email
+                <button type="submit" wire:target="sendEmail" wire:loading.attr="disabled"
+                    class="shrink-0 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-800 dark:hover:bg-slate-700">
+                    <span wire:loading.remove wire:target="sendEmail">Kirim Email</span>
+                    <span wire:loading wire:target="sendEmail">Mengirim…</span>
                 </button>
             </form>
             @error('email') <p class="text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror

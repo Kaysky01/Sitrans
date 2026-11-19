@@ -18,13 +18,12 @@ class StockItemForm
                 ->formatStateUsing(fn ($record): string => $record?->label() ?? ''),
             TextInput::make('quantity')
                 ->label('Stok saat ini')
-                ->numeric()
                 ->disabled()
                 ->dehydrated(false)
                 ->formatStateUsing(fn ($record): string => $record === null
                     ? ''
                     : Format::quantity($record->quantity, $record->product?->quantityDecimals() ?? 0).' '.($record->product?->unitLabel() ?? ''))
-                ->helperText('Ubah jumlah stok melalui aksi "Penyesuaian" pada daftar.'),
+                ->helperText('Satuan porsi/gelas tampil bulat; satuan timbangan/liter tampil desimal. Ubah stok via aksi "Penyesuaian".'),
             TextInput::make('reorder_level')
                 ->label('Batas minimum')
                 ->numeric()

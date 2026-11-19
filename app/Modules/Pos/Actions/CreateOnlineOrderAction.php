@@ -2,6 +2,8 @@
 
 namespace App\Modules\Pos\Actions;
 
+use App\Exceptions\NotFoundError;
+use App\Exceptions\ValidationError;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\PaymentMethod;
@@ -50,12 +52,28 @@ final class CreateOnlineOrderAction
         ]);
 
         foreach ($data['items'] as $line) {
-            $product = Product::query()->findOrFail($line['product_id']);
+            $product = Product::query()->find($line['product_id']);
+
+            if ($product === null) {
+                throw new NotFoundError(
+                    'Menu yang dipesan tidak ditemukan. Mungkin menu sudah dihapus. Perbarui daftar menu lalu coba lagi.',
+                    'items',
+                    'MENU_TIDAK_DITEMUKAN',
+                );
+            }
+
+            $quantity = (float) ($line['quantity'] ?? 1);
+
+            if ($quantity <= 0) {
+                throw ValidationError::with('items', 'Jumlah pesanan untuk '.$product->name.' minimal 1.', 'JUMLAH_TIDAK_VALID');
+            }
 
             if (! $product->isOrderable()) {
-                throw ValidationException::withMessages([
-                    'items' => "{$product->name} sedang tidak tersedia.",
-                ]);
+                throw ValidationError::with(
+                    'items',
+                    "{$product->name} sedang tidak tersedia.",
+                    'MENU_TIDAK_TERSEDIA',
+                );
             }
 
             $variant = $this->resolveVariant($product, $line['product_variant_id'] ?? null);
@@ -66,7 +84,7 @@ final class CreateOnlineOrderAction
                 'name' => $product->name,
                 'variant_name' => $variant?->name,
                 'unit_price' => $variant !== null ? (float) $variant->price : (float) $product->price,
-                'quantity' => (float) ($line['quantity'] ?? 1),
+                'quantity' => $quantity,
                 'cogs' => (float) $product->cost,
                 'notes' => $line['notes'] ?? null,
                 'modifiers' => $this->resolveModifiers($product, $line['modifier_ids'] ?? []),

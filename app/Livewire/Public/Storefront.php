@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Public;
 
+use App\Exceptions\AppError;
 use App\Models\Category;
 use App\Models\Outlet;
 use App\Models\PaymentMethod;
@@ -126,9 +127,17 @@ class Storefront extends Component
 
     public function addToCart(int $productId): void
     {
-        $product = Product::query()->with('variants')->findOrFail($productId);
+        $product = Product::query()->with('variants')->find($productId);
+
+        if ($product === null) {
+            $this->addError('cart', 'Menu tidak ditemukan. Muat ulang halaman untuk daftar menu terbaru.');
+
+            return;
+        }
 
         if (! $product->isOrderable()) {
+            $this->addError('cart', $product->name.' sedang tidak tersedia. Hapus dari keranjang atau pilih menu lain.');
+
             return;
         }
 
@@ -234,6 +243,10 @@ class Storefront extends Component
             ]);
         } catch (ValidationException $exception) {
             $this->addError('cart', collect($exception->errors())->flatten()->first() ?? 'Pesanan gagal dibuat.');
+
+            return;
+        } catch (AppError $exception) {
+            $this->addError('cart', $exception->getMessage());
 
             return;
         }

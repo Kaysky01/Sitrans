@@ -8,6 +8,7 @@ use App\Modules\Pos\Actions\CreateOnlineOrderAction;
 use App\Modules\Pos\Enums\OrderType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class OrderController
 {
@@ -34,15 +35,70 @@ class OrderController
             abort(422, 'Outlet belum dikonfigurasi untuk kafe ini.');
         }
 
-        $order = app(CreateOnlineOrderAction::class)->execute($outlet, [
+        // Idempotency-Key: retry jaringan dengan kunci sama tidak membuat
+        // order dobel — response pertama dikirim ulang.
+        $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
+
+        if ($idempotencyKey !== '') {
+            return $this->storeIdempotent($outlet, $data, $idempotencyKey);
+        }
+
+        $order = $this->createOrder($outlet, $data);
+
+        return response()->json(['data' => $this->present($order)], 201);
+    }
+
+    private function storeIdempotent(Outlet $outlet, array $data, string $key): JsonResponse
+    {
+        $cacheKey = 'order-idem:'.$outlet->tenant_id.':'.sha1($key);
+
+        $cached = Cache::get($cacheKey);
+
+        if ($cached !== null) {
+            return response()->json($cached, 200)
+                ->header('Idempotency-Replayed', 'true');
+        }
+
+        // Kunci singkat mencegah dua request bersamaan dengan kunci sama
+        // membuat order kembar.
+        $lock = Cache::lock($cacheKey.':lock', 10);
+
+        if (! $lock->get()) {
+            abort(429, 'Pesanan dengan kunci yang sama sedang diproses. Tunggu beberapa saat lalu coba lagi.');
+        }
+
+        try {
+            $cached = Cache::get($cacheKey);
+
+            if ($cached !== null) {
+                return response()->json($cached, 200)
+                    ->header('Idempotency-Replayed', 'true');
+            }
+
+            $order = $this->createOrder($outlet, $data);
+
+            $payload = ['data' => $this->present($order)];
+
+            Cache::put($cacheKey, $payload, now()->addDay());
+
+            return response()->json($payload, 201);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function createOrder(Outlet $outlet, array $data): Order
+    {
+        return app(CreateOnlineOrderAction::class)->execute($outlet, [
             'type' => isset($data['type']) ? OrderType::from($data['type']) : null,
             'customer_name' => $data['customer_name'] ?? null,
             'notes' => $data['notes'] ?? null,
             'payment_method' => $data['payment_method'] ?? null,
             'items' => $data['items'],
         ]);
-
-        return response()->json(['data' => $this->present($order)], 201);
     }
 
     private function resolveOutlet(?int $outletId): ?Outlet

@@ -27,8 +27,8 @@ class VariantsRelationManager extends RelationManager
         return $schema->components([
             TextInput::make('name')->label('Nama variasi')->required()->maxLength(60)
                 ->placeholder('Regular / Large'),
-            TextInput::make('price')->label('Harga')->numeric()->prefix('Rp')->default(0),
-            TextInput::make('sort_order')->label('Urutan')->numeric()->default(0),
+            TextInput::make('price')->label('Harga')->numeric()->prefix('Rp')->default(0)->placeholder('25000')->helperText('Harga varian ini.'),
+            TextInput::make('sort_order')->label('Urutan')->numeric()->default(0)->helperText('Angka kecil tampil lebih dulu.'),
             Toggle::make('is_default')->label('Default'),
             Toggle::make('is_active')->label('Aktif')->default(true),
         ]);

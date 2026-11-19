@@ -61,8 +61,10 @@ class ProductsTable
             )
             ->reorderRecordsTriggerAction(
                 fn (Action $action, bool $isReordering): Action => $action
-                    ->label($isReordering ? 'Selesai Mengurutkan' : 'Urutkan Menu')
-                    ->tooltip('Aktifkan lalu seret baris untuk mengatur urutan menu yang tampil di POS.'),
+                    ->label($isReordering ? 'Selesai Mengurutkan' : 'Urutkan (Seret-Lepas)')
+                    ->button()
+                    ->color($isReordering ? 'success' : 'gray')
+                    ->tooltip('Klik tombol ini, lalu seret baris ke atas/bawah untuk menyusun urutan menu di kasir.'),
             )
             ->filters([
                 SelectFilter::make('category')->relationship('category', 'name')->label('Kategori'),
@@ -95,23 +97,34 @@ class ProductsTable
             ])
             ->toolbarActions([
                 Action::make('generate_all_photos')
-                    ->label('Foto Otomatis Semua Menu')
+                    ->label('Foto Contoh (Menu Tanpa Foto)')
                     ->icon('heroicon-o-sparkles')
-                    ->color('primary')
-                    ->tooltip('Isi foto contoh untuk semua menu yang belum punya foto yang cocok, berdasarkan nama menu.')
+                    ->color('gray')
+                    ->tooltip('Isi foto contoh bawaan hanya untuk menu yang belum memiliki foto.')
                     ->requiresConfirmation()
-                    ->modalHeading('Gunakan foto contoh untuk semua menu?')
-                    ->modalDescription('Semua menu akan memakai contoh foto bawaan sesuai namanya. Foto unggahan yang sudah ada akan diganti.')
-                    ->modalSubmitActionLabel('Ya, gunakan contoh')
+                    ->modalHeading('Isi foto contoh untuk menu tanpa foto?')
+                    ->modalDescription('Menu yang belum memiliki foto akan dipasangkan foto contoh bawaan sesuai namanya. Menu yang sudah memiliki foto sendiri tidak akan diubah.')
+                    ->modalSubmitActionLabel('Ya, pasang foto contoh')
                     ->visible(fn (): bool => ProductResource::canCreate())
                     ->action(function (): void {
-                        $products = Product::all();
+                        $products = Product::query()->whereNull('image_path')->orWhere('image_path', '')->get();
+
+                        if ($products->isEmpty()) {
+                            Notification::make()
+                                ->title('Semua menu sudah memiliki foto')
+                                ->body('Tidak ada menu tanpa foto yang perlu diisi.')
+                                ->info()
+                                ->send();
+
+                            return;
+                        }
+
                         foreach ($products as $product) {
                             $product->update(['image_path' => static::determinePhotoPath($product)]);
                         }
 
                         Notification::make()
-                            ->title('Foto berhasil di-generate untuk semua menu')
+                            ->title('Foto contoh berhasil dipasang untuk '.$products->count().' menu')
                             ->success()
                             ->send();
                     }),

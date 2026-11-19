@@ -17,7 +17,7 @@ class BundleForm
             TextInput::make('name')->label('Nama paket')->required()->maxLength(120),
             Select::make('category_id')->label('Kategori')->relationship('category', 'name')->searchable()->preload(),
             Textarea::make('description')->label('Deskripsi')->rows(3)->columnSpanFull(),
-            TextInput::make('price')->label('Harga paket')->numeric()->prefix('Rp')->required()->default(0),
+            TextInput::make('price')->label('Harga paket')->numeric()->prefix('Rp')->required()->default(0)->placeholder('35000')->helperText('Harga paket promo, contoh: 35000.'),
             ImageUpload::make('image_path', 'bundles', 'Foto paket'),
             Toggle::make('is_active')->label('Aktif')->default(true),
         ]);

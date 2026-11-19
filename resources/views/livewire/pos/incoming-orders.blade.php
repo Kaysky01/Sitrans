@@ -9,7 +9,7 @@
     ];
 @endphp
 
-<div class="space-y-4">
+<div class="space-y-4" wire:poll.20s>
     @if ($toastMessage)
         <div x-data="{ show: true }" x-init="setTimeout(() => { show = false; $wire.clearToast(); }, 4000)" x-show="show"
             x-transition

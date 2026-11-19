@@ -67,6 +67,13 @@ class StockItemsTable
                             ->numeric()
                             ->required()
                             ->step(fn (StockItem $record): string => $record->product?->isFractionalUnit() ? '0.001' : '1')
+                            ->rule(fn (StockItem $record): \Closure => static function (string $attribute, mixed $value, \Closure $fail) use ($record): void {
+                                $product = $record->product;
+
+                                if ($product !== null && ! $product->isFractionalUnit() && abs((float) $value - floor((float) $value)) > 0.0001) {
+                                    $fail('Stok untuk satuan '.$product->unitLabel().' harus bilangan bulat.');
+                                }
+                            })
                             ->helperText(fn (StockItem $record, callable $get): string => $get('type') === StockMovementType::Adjustment->value
                                 ? 'Nilai koreksi, boleh negatif (mis. -3). Satuan: '.($record->product?->unitLabel() ?? '-').'.'
                                 : 'Jumlah positif. Satuan: '.($record->product?->unitLabel() ?? '-').'.'),

@@ -8,15 +8,7 @@
 
             <div class="relative z-10">
                 <a href="{{ route('landing') }}" class="inline-flex items-center gap-2.5">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-navy-900 shadow-md">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                            <line x1="6" y1="1" x2="6" y2="4"></line>
-                            <line x1="10" y1="1" x2="10" y2="4"></line>
-                            <line x1="14" y1="1" x2="14" y2="4"></line>
-                        </svg>
-                    </div>
+                    <img src="{{ asset('images/sitrans-logo.png') }}" alt="Sitrans" class="h-11 w-11 rounded-xl bg-white object-contain p-0.5 shadow-md" />
                     <span class="font-display text-2xl font-black tracking-tight text-white">Sitrans</span>
                 </a>
 

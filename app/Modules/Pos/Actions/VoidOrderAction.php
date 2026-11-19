@@ -8,6 +8,7 @@ use App\Modules\Inventory\Services\StockLedger;
 use App\Modules\Pos\Enums\OrderStatus;
 use App\Support\Audit\ActivityLogger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Voids an order. Must be authorised by a supervisor PIN before calling.
@@ -19,6 +20,16 @@ final class VoidOrderAction
     public function execute(Order $order, User $actor, string $reason): Order
     {
         return DB::transaction(function () use ($order, $actor, $reason): Order {
+            if ($order->status === OrderStatus::Voided) {
+                return $order;
+            }
+
+            if ($order->status === OrderStatus::Refunded) {
+                throw ValidationException::withMessages([
+                    'reason' => 'Transaksi yang sudah dikembalikan tidak dapat di-void.',
+                ]);
+            }
+
             $order->fill([
                 'status' => OrderStatus::Voided,
                 'voided_by' => $actor->getKey(),

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Inventory\Services;
 
+use App\Exceptions\ValidationError;
 use App\Models\BundleItem;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -42,9 +43,23 @@ final class StockLedger
         ?string $reference = null,
         ?int $userId = null,
         ?string $note = null,
+        bool $allowNegative = true,
     ): StockMovement {
         $delta = round($delta, 3);
         $balance = round((float) $item->quantity + $delta, 3);
+
+        // Penjualan tidak boleh membuat stok minus. Penyesuaian manual oleh
+        // admin (stock opname) tetap boleh untuk koreksi.
+        if ($balance < 0 && ! $allowNegative) {
+            $product = $item->product;
+
+            throw ValidationError::with(
+                'items',
+                'Stok '.($product?->name ?? 'produk').' tersisa '.$this->formatQuantity((float) $item->quantity).'.',
+                'STOK_TIDAK_CUKUP',
+            );
+        }
+
         $statusBefore = $this->statusOf($item);
 
         $item->quantity = $balance;
@@ -99,6 +114,10 @@ final class StockLedger
             return;
         }
 
+        // Cek ketersediaan lebih dulu supaya pesan ke kasir jelas: produk
+        // mana yang kurang dan sisa stoknya berapa, sebelum ada pencatatan.
+        $this->ensureAvailabilityForOrder($order);
+
         $order->loadMissing('items.product', 'items.bundle.items.product');
 
         foreach ($order->items as $item) {
@@ -107,7 +126,7 @@ final class StockLedger
                     continue;
                 }
 
-                $stock = $this->forProduct($product, $variantId);
+                $stock = $this->lockedForProduct($product, $variantId);
 
                 $this->adjust(
                     $stock,
@@ -115,9 +134,79 @@ final class StockLedger
                     StockMovementType::Sale,
                     $order->number,
                     $order->user_id,
+                    allowNegative: false,
                 );
             }
         }
+    }
+
+    /**
+     * Validasi ketersediaan stok untuk seluruh item pesanan. Melempar
+     * ValidationError (STOK_TIDAK_CUKUP) yang berisi daftar produk kurang.
+     */
+    public function ensureAvailabilityForOrder(Order $order): void
+    {
+        $order->loadMissing('items.product', 'items.bundle.items.product');
+
+        /** @var array<string, array{0: Product, 1: ?int, 2: float}> $required */
+        $required = [];
+
+        foreach ($order->items as $item) {
+            foreach ($this->stockComponents($item) as [$product, $variantId, $quantity]) {
+                if (! $product->track_stock) {
+                    continue;
+                }
+
+                $key = $product->getKey().':'.($variantId ?? 'base');
+                $required[$key] = [$product, $variantId, ($required[$key][2] ?? 0) + $quantity];
+            }
+        }
+
+        $shortages = [];
+
+        foreach ($required as [$product, $variantId, $quantity]) {
+            $stock = $this->forProduct($product, $variantId);
+            $available = (float) $stock->quantity;
+
+            if ($available < $quantity) {
+                $shortages[] = 'Stok '.$product->name.' tersisa '.$this->formatQuantity($available);
+            }
+        }
+
+        if ($shortages !== []) {
+            throw ValidationError::with(
+                'items',
+                implode('. ', $shortages).'. Sesuaikan jumlah di keranjang.',
+                'STOK_TIDAK_CUKUP',
+            );
+        }
+    }
+
+    /**
+     * Tampilkan kuantitas dengan gaya Indonesia: "2" untuk satuan bulat,
+     * "2,5" untuk satuan pecahan.
+     */
+    public function formatQuantity(float $quantity): string
+    {
+        $rounded = round($quantity, 2);
+
+        if (abs($rounded - floor($rounded)) < 0.005) {
+            return (string) (int) $rounded;
+        }
+
+        return str_replace('.', ',', (string) rtrim(rtrim(number_format($rounded, 2, '.', ''), '0'), '.'));
+    }
+
+    private function lockedForProduct(Product $product, ?int $variantId): StockItem
+    {
+        $item = StockItem::query()
+            ->where('tenant_id', $product->tenant_id)
+            ->where('product_id', $product->getKey())
+            ->where('product_variant_id', $variantId)
+            ->lockForUpdate()
+            ->first();
+
+        return $item ?? $this->forProduct($product, $variantId);
     }
 
     public function restoreForOrder(Order $order): void

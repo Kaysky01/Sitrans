@@ -7,6 +7,9 @@
 <body style="margin:0;padding:24px;background:#faf7f2;font-family:Arial,Helvetica,sans-serif;color:#1c1917;">
     <div style="max-width:420px;margin:0 auto;background:#ffffff;border-radius:16px;padding:24px;">
         <div style="text-align:center;">
+            @if ($receipt?->show_logo ?? true)
+                <img src="{{ asset('images/sitrans-logo.png') }}" alt="Sitrans" width="56" height="56" style="display:block;width:56px;height:56px;margin:0 auto 8px;object-fit:contain;" />
+            @endif
             <h1 style="margin:0;font-size:18px;">{{ $receipt?->header ?? $order->outlet?->name ?? 'Sitrans' }}</h1>
             @if ($order->outlet?->address)
                 <p style="margin:4px 0 0;font-size:12px;color:#57534e;">{{ $order->outlet->address }}</p>

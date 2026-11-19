@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\RateLimitedLogin;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\ResolveTenant;
 use Filament\Http\Middleware\Authenticate;
@@ -32,7 +33,9 @@ class AppPanelProvider extends PanelProvider
             ->path('app')
             ->viteTheme('resources/css/filament/app/theme.css')
             ->brandName('Sitrans')
-            ->login()
+            ->brandLogo(asset('images/sitrans-logo.png'))
+            ->brandLogoHeight('3rem')
+            ->login(RateLimitedLogin::class)
             ->passwordReset()
             ->profile()
             ->colors([
@@ -58,6 +61,14 @@ class AppPanelProvider extends PanelProvider
             // Di desktop navigasi selalu terlihat dan hanya dapat diciutkan;
             // hamburger dipakai otomatis oleh Filament pada layar kecil.
             ->sidebarCollapsibleOnDesktop()
+            // Urutan mengikuti alur kerja harian: layani transaksi, kelola menu,
+            // pantau persediaan, lalu atur operasional usaha.
+            ->navigationGroups([
+                'Transaksi',
+                'Menu',
+                'Inventaris',
+                'Pengaturan',
+            ])
             // Konten mengisi lebar jendela, bukan berhenti di kotak tengah.
             ->maxContentWidth('full')
             ->databaseNotifications()

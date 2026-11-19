@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ConflictError;
 use App\Filament\App\Resources\StockItems\Pages\ListStockItems;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -116,11 +117,11 @@ it('never deducts the same order twice', function () {
 
     $order = payOrderFor($product, 3);
 
-    app(PayOrderAction::class)->execute($order, [[
+    expect(fn () => app(PayOrderAction::class)->execute($order, [[
         'method_name' => 'Tunai',
         'method_type' => PaymentType::Cash,
         'amount' => 0,
-    ]]);
+    ]]))->toThrow(ConflictError::class);
 
     expect($stock->fresh()->quantity)->toBe(7.0)
         ->and(StockMovement::query()->where('reference', $order->number)->count())->toBe(1);

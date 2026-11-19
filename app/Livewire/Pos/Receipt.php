@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Throwable;
 
 #[Layout('components.layouts.base')]
 class Receipt extends Component
@@ -20,6 +21,10 @@ class Receipt extends Component
     public string $email = '';
 
     public ?string $sentTo = null;
+
+    public ?string $sendError = null;
+
+    public bool $sendingEmail = false;
 
     public function mount(Order $order): void
     {
@@ -38,10 +43,20 @@ class Receipt extends Component
 
         $to = $this->email;
 
-        Mail::to($to)->send(new OrderReceiptMail($this->order, $this->receipt));
+        try {
+            $this->sendingEmail = true;
 
-        $this->reset('email');
-        $this->sentTo = $to;
+            Mail::to($to)->send(new OrderReceiptMail($this->order, $this->receipt));
+
+            $this->reset('email', 'sendError');
+            $this->sentTo = $to;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->sendError = 'Struk gagal dikirim. Periksa koneksi atau coba beberapa saat lagi.';
+        } finally {
+            $this->sendingEmail = false;
+        }
     }
 
     public function newOrder(): mixed

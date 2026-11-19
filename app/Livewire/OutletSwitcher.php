@@ -18,6 +18,8 @@ class OutletSwitcher extends Component
 {
     public ?int $outletId = null;
 
+    public ?string $switchError = null;
+
     /**
      * The POS toolbar shows the pill even with a single outlet; the back
      * office topbar only shows it when there is something to switch.
@@ -47,6 +49,9 @@ class OutletSwitcher extends Component
         $outlet = $this->outlets->firstWhere('id', (int) $value);
 
         if ($outlet === null) {
+            $this->outletId = app(OutletManager::class)->id();
+            $this->switchError = 'Outlet tidak ditemukan. Pilih outlet dari daftar.';
+
             return;
         }
 

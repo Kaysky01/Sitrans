@@ -35,6 +35,9 @@ class TaxReport extends Page
 
     public ?int $outletId = null;
 
+    /** Pesan rentang tanggal tidak valid untuk ditampilkan inline. */
+    public ?string $rangeError = null;
+
     public static function canAccess(): bool
     {
         return auth()->user()?->can('reports.view') ?? false;
@@ -136,6 +139,9 @@ class TaxReport extends Page
 
         if ($from->greaterThan($to)) {
             [$from, $to] = [$to, $from];
+            $this->rangeError = 'Rentang tanggal tidak valid: tanggal awal melebihi tanggal akhir. Kedua tanggal ditukar otomatis agar laporan tetap tampil.';
+        } else {
+            $this->rangeError = null;
         }
 
         return [$from->startOfDay(), $to->endOfDay()];

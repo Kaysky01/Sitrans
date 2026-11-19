@@ -23,7 +23,7 @@ class SalesReport extends Page
 
     protected static string|\UnitEnum|null $navigationGroup = 'Transaksi';
 
-    protected static ?string $navigationLabel = 'Laporan';
+    protected static ?string $navigationLabel = 'Penjualan';
 
     protected static ?string $title = 'Laporan penjualan';
 
@@ -34,6 +34,9 @@ class SalesReport extends Page
     public string $to = '';
 
     public ?int $outletId = null;
+
+    /** Pesan rentang tanggal tidak valid untuk ditampilkan inline. */
+    public ?string $rangeError = null;
 
     public static function canAccess(): bool
     {
@@ -158,6 +161,9 @@ class SalesReport extends Page
 
         if ($from->greaterThan($to)) {
             [$from, $to] = [$to, $from];
+            $this->rangeError = 'Rentang tanggal tidak valid: tanggal awal melebihi tanggal akhir. Kedua tanggal ditukar otomatis agar laporan tetap tampil.';
+        } else {
+            $this->rangeError = null;
         }
 
         return [$from->startOfDay(), $to->endOfDay()];

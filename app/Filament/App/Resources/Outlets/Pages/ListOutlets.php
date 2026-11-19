@@ -13,6 +13,10 @@ class ListOutlets extends ListRecords
     protected function getHeaderActions(): array
     {
         // Sembunyikan tombol tambah bagi role yang tidak dapat mengelola data ini.
-        return static::$resource::canCreate() ? [CreateAction::make()] : [];
+        return static::$resource::canCreate() ? [
+            CreateAction::make()
+                ->label('Tambah Outlet')
+                ->tooltip('Daftarkan cabang atau outlet baru.'),
+        ] : [];
     }
 }

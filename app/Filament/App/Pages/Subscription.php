@@ -22,9 +22,19 @@ class Subscription extends Page
 
     protected static ?string $navigationLabel = 'Langganan';
 
-    protected static ?string $title = 'Langganan';
+    protected static ?string $title = 'Langganan & Paket Kafe';
 
     protected static ?int $navigationSort = 5;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return 'Owner';
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
 
     public static function canAccess(): bool
     {

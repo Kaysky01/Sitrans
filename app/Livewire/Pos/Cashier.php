@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pos;
 
+use App\Exceptions\ConflictError;
 use App\Models\Bundle;
 use App\Models\CashShift;
 use App\Models\Category;
@@ -20,6 +21,7 @@ use App\Modules\Pos\Actions\PayOrderAction;
 use App\Modules\Pos\Actions\RecalculateOrderAction;
 use App\Modules\Pos\Actions\VerifySupervisorPinAction;
 use App\Modules\Pos\Enums\DiscountType;
+use App\Modules\Pos\Enums\OrderStatus;
 use App\Modules\Pos\Enums\OrderType;
 use App\Modules\Pos\Enums\PaymentType;
 use App\Modules\Pos\Services\CashShiftService;
@@ -317,9 +319,17 @@ class Cashier extends Component
 
     public function chooseProduct(int $productId): void
     {
-        $product = Product::with(['variants', 'modifierGroups'])->findOrFail($productId);
+        $product = Product::with(['variants', 'modifierGroups'])->find($productId);
+
+        if ($product === null) {
+            $this->toast('Menu tidak ditemukan. Muat ulang halaman untuk mendapatkan daftar menu terbaru.', 'error');
+
+            return;
+        }
 
         if (! $product->isOrderable()) {
+            $this->toast($product->name.' sedang tidak tersedia.', 'warning');
+
             return;
         }
 
@@ -406,10 +416,7 @@ class Cashier extends Component
         }
 
         $this->recalculate();
-
-        if ($this->order?->items->isEmpty()) {
-            $this->orderId = null;
-        }
+        $this->forgetEmptyOrder();
     }
 
     public function removeItem(int $itemId): void
@@ -422,10 +429,7 @@ class Cashier extends Component
 
         $item->delete();
         $this->recalculate();
-
-        if ($this->order?->items->isEmpty()) {
-            $this->orderId = null;
-        }
+        $this->forgetEmptyOrder();
 
         $this->toast('Item dihapus dari keranjang.');
     }
@@ -618,7 +622,21 @@ class Cashier extends Component
             $lines[] = $this->paymentLine((int) $methodId, (float) $extra['amount'], $extra['reference'] ?? null, $index);
         }
 
-        $action->execute($order, $lines);
+        try {
+            $action->execute($order, $lines);
+        } catch (ConflictError $exception) {
+            // Pesanan sudah dibayar/berubah di tempat lain — jangan dobel.
+            $this->showPaymentModal = false;
+            $this->toast($exception->getMessage(), 'warning');
+
+            $order->refresh();
+
+            if ($order->status === OrderStatus::Paid) {
+                $this->redirect(route('receipt', ['order' => $order->getKey()]), navigate: true);
+            }
+
+            return;
+        }
 
         $this->showPaymentModal = false;
         $this->redirect(route('receipt', ['order' => $order->getKey()]), navigate: true);
@@ -799,6 +817,26 @@ class Cashier extends Component
         if ($order !== null) {
             app(RecalculateOrderAction::class)->execute($order);
         }
+    }
+
+    /**
+     * Keranjang kosong tidak boleh menyisakan order Open orphan di database:
+     * draft tanpa item langsung dihapus (aman, belum ada pembayaran).
+     */
+    private function forgetEmptyOrder(): void
+    {
+        $order = $this->order;
+
+        if ($order === null || $order->status !== OrderStatus::Open) {
+            return;
+        }
+
+        if ($order->items()->exists()) {
+            return;
+        }
+
+        $order->delete();
+        $this->orderId = null;
     }
 
     /**

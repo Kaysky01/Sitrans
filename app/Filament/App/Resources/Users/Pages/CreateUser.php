@@ -7,6 +7,7 @@ use App\Support\Access\RoleDefinitions;
 use App\Support\Tenant\TenantManager;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 
 class CreateUser extends CreateRecord
@@ -25,6 +26,14 @@ class CreateUser extends CreateRecord
     {
         $this->role = $data['role'] ?? RoleDefinitions::CASHIER;
         unset($data['role']);
+
+        // Peran Owner tidak pernah bisa dipilih lewat API/payload manual:
+        // hanya pemilik akun utama saat registrasi yang berperan Owner.
+        if ($this->role === RoleDefinitions::OWNER) {
+            throw ValidationException::withMessages([
+                'role' => 'Peran Owner tidak bisa dipilih. Owner adalah pemilik akun utama kafe.',
+            ]);
+        }
 
         return $data;
     }

@@ -21,7 +21,7 @@
         })();
     </script>
 
-    @vite(['resources/css/app.css'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased selection:bg-navy-500 selection:text-white dark:bg-espresso-950 dark:text-cream-100">
     {{ $slot }}

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -46,6 +47,23 @@ class Product extends Model
         static::saving(function (Product $product): void {
             if (blank($product->sku)) {
                 $product->sku = static::generateSku($product);
+            }
+        });
+
+        // Bersihkan file foto lama saat diganti agar tidak jadi orphan, dan
+        // hapus file saat produk dihapus permanen (soft delete tetap bisa
+        // direstore bersama fotonya).
+        static::updated(function (Product $product): void {
+            $original = $product->getOriginal('image_path');
+
+            if ($product->isDirty('image_path') && filled($original) && $original !== $product->image_path) {
+                Storage::disk(config('uploads.disk'))->delete($original);
+            }
+        });
+
+        static::forceDeleted(function (Product $product): void {
+            if (filled($product->image_path)) {
+                Storage::disk(config('uploads.disk'))->delete($product->image_path);
             }
         });
     }

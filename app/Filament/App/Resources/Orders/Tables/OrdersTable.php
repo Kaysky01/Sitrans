@@ -150,6 +150,7 @@ class OrdersTable
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn (Order $record): bool => ! $record->isVoided()
+                        && $record->status !== OrderStatus::Refunded
                         && (auth()->user()?->can('orders.void') ?? false))
                     ->modalHeading('Batalkan transaksi')
                     ->form([

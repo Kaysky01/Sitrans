@@ -20,7 +20,8 @@ class PaymentMethodForm
                 ->label('Nama metode')
                 ->required()
                 ->maxLength(60)
-                ->helperText('Nama yang tampil di layar kasir, mis. Tunai, QRIS, atau Transfer Bank.'),
+                ->placeholder('Contoh: QRIS Toko, EDC BCA, Tunai')
+                ->helperText('Nama tombol yang tampil di kasir. Buat terpisah jika ada beberapa bank atau mesin EDC berbeda.'),
             Select::make('type')
                 ->label('Tipe')
                 ->options(collect(PaymentType::cases())->mapWithKeys(
@@ -33,12 +34,12 @@ class PaymentMethodForm
                     'requires_reference',
                     PaymentType::tryFrom((string) $state)?->requiresReference() ?? false,
                 ))
-                ->helperText('Tipe menentukan perlakuan pembayaran: tunai memakai kembalian, non-tunai biasanya memakai referensi.'),
+                ->helperText('Tipe teknis pembayaran. Satu toko bisa punya beberapa rekening bank/EDC berbeda untuk tipe yang sama.'),
             TextInput::make('code')
-                ->label('Kode')
+                ->label('Kode internal')
                 ->maxLength(30)
-                ->placeholder('Kosongkan untuk otomatis')
-                ->helperText('Opsional. Jika dikosongkan, kode dibuat dari nama, mis. "QRIS Toko" menjadi qris_toko.')
+                ->placeholder('Kosongkan untuk dibuatkan otomatis')
+                ->helperText('Kode unik sistem. Boleh dikosongkan — otomatis dibuat dari nama metode, mis. "EDC BCA" menjadi edc_bca.')
                 ->dehydrated(fn (?string $state): bool => filled($state))
                 ->unique(
                     ignoreRecord: true,

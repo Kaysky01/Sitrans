@@ -13,6 +13,10 @@ class ListModifierGroups extends ListRecords
     protected function getHeaderActions(): array
     {
         // Sembunyikan tombol tambah bagi role yang tidak dapat mengelola data ini.
-        return static::$resource::canCreate() ? [CreateAction::make()] : [];
+        return static::$resource::canCreate() ? [
+            CreateAction::make()
+                ->label('Tambah Grup Opsi')
+                ->tooltip('Buat grup opsi tambahan untuk menu (mis. Level Gula, Topping, Ukuran Cup).'),
+        ] : [];
     }
 }
